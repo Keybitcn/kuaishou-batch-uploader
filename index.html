@@ -1,0 +1,1885 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>磁力金牛 · 快手批量上传系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;family=Noto+Sans+SC:wght@400;500;700&amp;display=swap');
+        
+        :root {
+            --primary: #0ea5e9;
+        }
+        
+        body {
+            font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif;
+        }
+        
+        .glass {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(20px);
+        }
+        
+        .dark .glass {
+            background: rgba(15, 23, 42, 0.95);
+        }
+        
+        .nav-active {
+            background-color: #0ea5e9;
+            color: white;
+            border-radius: 8px;
+        }
+        
+        .video-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .video-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+        
+        .stat-card {
+            transition: transform 0.2s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .progress-bar {
+            transition: width 0.4s ease;
+        }
+        
+        .section {
+            display: none;
+        }
+        
+        .section.active {
+            display: block;
+        }
+        
+        .modal {
+            animation: modalPop 0.3s ease forwards;
+        }
+        
+        @keyframes modalPop {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+        
+        .kuaishou-gradient {
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .upload-zone {
+            transition: all 0.3s ease;
+        }
+        
+        .upload-zone.dragover {
+            border-color: #0ea5e9;
+            background-color: #f0f9ff;
+        }
+        
+        .metric-value {
+            font-variant-numeric: tabular-nums;
+        }
+        
+        .status-dot {
+            animation: pulse 2s infinite;
+        }
+        
+        .nav-item {
+            transition: all 0.2s ease;
+        }
+        
+        .nav-item:hover {
+            background-color: #f1f5f9;
+        }
+        
+        .dark .nav-item:hover {
+            background-color: #334155;
+        }
+        
+        .data-table {
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .custom-scroll {
+            scrollbar-width: thin;
+            scrollbar-color: #64748b30 #f1f5f9;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+    <!-- 顶部导航栏 -->
+    <nav class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-50">
+        <div class="max-w-screen-2xl mx-auto">
+            <div class="px-8 py-4 flex items-center justify-between">
+                <div class="flex items-center gap-x-4">
+                    <!-- Logo -->
+                    <div class="flex items-center gap-x-3">
+                        <div class="w-11 h-11 bg-gradient-to-br from-sky-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
+                            <i class="fa-solid fa-bullseye text-white text-3xl"></i>
+                        </div>
+                        <div>
+                            <div class="font-bold text-2xl tracking-tighter">磁力金牛</div>
+                            <div class="text-[10px] text-slate-500 -mt-1">KUAI SHOU BATCH</div>
+                        </div>
+                    </div>
+                    <div class="px-3 py-1 bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 text-xs font-medium rounded-full flex items-center gap-x-1.5">
+                        <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                        <span>API 已连接</span>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-x-4">
+                    <!-- 用户信息 -->
+                    <div class="flex items-center gap-x-3 px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-3xl">
+                        <div class="text-right">
+                            <div class="font-semibold text-sm">张经理</div>
+                            <div class="text-xs text-slate-500">ID: KS-88291</div>
+                        </div>
+                        <div class="w-9 h-9 bg-gradient-to-br from-violet-500 to-fuchsia-500 rounded-2xl flex items-center justify-center text-white font-bold text-sm ring-2 ring-white dark:ring-slate-800">张</div>
+                    </div>
+                    
+                    <button onclick="showSettings()" 
+                            class="px-4 py-2 text-sm flex items-center gap-x-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-2xl transition-colors">
+                        <i class="fa-solid fa-cog"></i>
+                        <span class="hidden md:inline">设置</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="flex max-w-screen-2xl mx-auto">
+        <!-- 侧边栏 -->
+        <div class="w-72 bg-white dark:bg-slate-800 border-r border-slate-200 dark:border-slate-700 min-h-[calc(100vh-73px)] p-5 flex flex-col">
+            <div class="mb-8 px-3">
+                <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 tracking-widest mb-3 px-3">主菜单</div>
+                
+                <div onclick="navigateTo('dashboard')" class="nav-item flex items-center gap-x-3 px-4 py-3 rounded-2xl cursor-pointer mb-1 nav-active" id="nav-dashboard">
+                    <i class="fa-solid fa-chart-line w-5 text-center"></i>
+                    <span class="font-medium">仪表盘</span>
+                </div>
+                
+                <div onclick="navigateTo('library')" class="nav-item flex items-center gap-x-3 px-4 py-3 rounded-2xl cursor-pointer mb-1" id="nav-library">
+                    <i class="fa-solid fa-video w-5 text-center"></i>
+                    <span class="font-medium">素材库</span>
+                    <span class="ml-auto text-xs px-2 py-0.5 bg-slate-200 dark:bg-slate-700 rounded-full" id="library-count">24</span>
+                </div>
+                
+                <div onclick="navigateTo('batch-upload')" class="nav-item flex items-center gap-x-3 px-4 py-3 rounded-2xl cursor-pointer mb-1" id="nav-batch-upload">
+                    <i class="fa-solid fa-cloud-upload-alt w-5 text-center"></i>
+                    <span class="font-medium">批量上传</span>
+                </div>
+                
+                <div class="my-4 border-t border-slate-200 dark:border-slate-700"></div>
+                
+                <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 tracking-widest mb-3 px-3">管理</div>
+                
+                <div onclick="navigateTo('shops')" class="nav-item flex items-center gap-x-3 px-4 py-3 rounded-2xl cursor-pointer mb-1" id="nav-shops">
+                    <i class="fa-solid fa-store w-5 text-center"></i>
+                    <span class="font-medium">店铺管理</span>
+                </div>
+                
+                <div onclick="navigateTo('promoters')" class="nav-item flex items-center gap-x-3 px-4 py-3 rounded-2xl cursor-pointer mb-1" id="nav-promoters">
+                    <i class="fa-solid fa-users w-5 text-center"></i>
+                    <span class="font-medium">推广户管理</span>
+                </div>
+                
+                <div onclick="navigateTo('history')" class="nav-item flex items-center gap-x-3 px-4 py-3 rounded-2xl cursor-pointer mb-1" id="nav-history">
+                    <i class="fa-solid fa-history w-5 text-center"></i>
+                    <span class="font-medium">上传历史</span>
+                </div>
+            </div>
+            
+            <div class="mt-auto px-4 py-4 bg-slate-50 dark:bg-slate-900 rounded-3xl text-xs">
+                <div class="flex items-center justify-between text-slate-500">
+                    <div>API 状态</div>
+                    <div class="flex items-center gap-x-1 text-emerald-500">
+                        <i class="fa-solid fa-check-circle"></i>
+                        <span class="font-medium">正常</span>
+                    </div>
+                </div>
+                <div class="text-[10px] mt-1">最后同步: 刚刚</div>
+            </div>
+        </div>
+        
+        <!-- 主内容区 -->
+        <div class="flex-1 p-8 overflow-auto custom-scroll" style="max-height: calc(100vh - 73px)">
+            
+            <!-- 仪表盘 -->
+            <div id="section-dashboard" class="section active">
+                <div class="flex items-end justify-between mb-8">
+                    <div>
+                        <h1 class="text-4xl font-bold tracking-tighter">欢迎回来，张经理</h1>
+                        <p class="text-slate-500 mt-1">今天是 2026年4月24日 · 磁力金牛数据看板</p>
+                    </div>
+                    <button onclick="navigateTo('batch-upload')" 
+                            class="px-6 py-3 bg-sky-600 hover:bg-sky-700 transition-colors text-white rounded-3xl flex items-center gap-x-3 shadow-lg shadow-sky-500/30">
+                        <i class="fa-solid fa-rocket"></i>
+                        <span class="font-semibold">立即批量上传</span>
+                    </button>
+                </div>
+                
+                <!-- 统计卡片 -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <div class="stat-card bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="text-sm text-slate-500">今日上传</div>
+                                <div class="text-4xl font-bold mt-2 metric-value" id="today-upload">187</div>
+                            </div>
+                            <div class="w-12 h-12 bg-emerald-100 dark:bg-emerald-900 rounded-2xl flex items-center justify-center">
+                                <i class="fa-solid fa-upload text-emerald-600 text-2xl"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-center text-emerald-600 text-sm">
+                            <i class="fa-solid fa-arrow-trend-up mr-1"></i>
+                            <span>+34% 较昨日</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="text-sm text-slate-500">成功率</div>
+                                <div class="text-4xl font-bold mt-2 metric-value">98.4<span class="text-2xl">%</span></div>
+                            </div>
+                            <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-2xl flex items-center justify-center">
+                                <i class="fa-solid fa-check-double text-blue-600 text-2xl"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-center text-emerald-600 text-sm">
+                            <span>本周最佳</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="text-sm text-slate-500">连接店铺</div>
+                                <div class="text-4xl font-bold mt-2 metric-value" id="connected-shops">12</div>
+                            </div>
+                            <div class="w-12 h-12 bg-violet-100 dark:bg-violet-900 rounded-2xl flex items-center justify-center">
+                                <i class="fa-solid fa-store text-violet-600 text-2xl"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 text-sm text-slate-500">其中 9 个活跃</div>
+                    </div>
+                    
+                    <div class="stat-card bg-white dark:bg-slate-800 p-6 rounded-3xl border border-slate-200 dark:border-slate-700">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="text-sm text-slate-500">推广户数</div>
+                                <div class="text-4xl font-bold mt-2 metric-value" id="connected-promoters">47</div>
+                            </div>
+                            <div class="w-12 h-12 bg-amber-100 dark:bg-amber-900 rounded-2xl flex items-center justify-center">
+                                <i class="fa-solid fa-users text-amber-600 text-2xl"></i>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex items-center text-emerald-600 text-sm">
+                            <i class="fa-solid fa-arrow-trend-up mr-1"></i>
+                            <span>本月新增 8 个</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                    <!-- 快速入口 -->
+                    <div class="lg:col-span-3 bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200 dark:border-slate-700">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="font-semibold text-lg">快速操作</h3>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div onclick="navigateTo('batch-upload')" class="group p-5 border border-slate-200 dark:border-slate-700 hover:border-sky-300 rounded-2xl cursor-pointer flex items-start gap-4">
+                                <div class="w-12 h-12 bg-sky-100 dark:bg-sky-900 text-sky-600 rounded-2xl flex-shrink-0 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    <i class="fa-solid fa-cloud-upload text-3xl"></i>
+                                </div>
+                                <div>
+                                    <div class="font-semibold">批量上传视频</div>
+                                    <div class="text-sm text-slate-500 mt-1">选择店铺 + 推广户 + 素材，一键发布</div>
+                                </div>
+                            </div>
+                            
+                            <div onclick="navigateTo('library')" class="group p-5 border border-slate-200 dark:border-slate-700 hover:border-sky-300 rounded-2xl cursor-pointer flex items-start gap-4">
+                                <div class="w-12 h-12 bg-emerald-100 dark:bg-emerald-900 text-emerald-600 rounded-2xl flex-shrink-0 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                    <i class="fa-solid fa-video text-3xl"></i>
+                                </div>
+                                <div>
+                                    <div class="font-semibold">上传新素材</div>
+                                    <div class="text-sm text-slate-500 mt-1">支持 MP4 / MOV，自动生成封面</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 最近活动 -->
+                    <div class="lg:col-span-2 bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200 dark:border-slate-700">
+                        <h3 class="font-semibold text-lg mb-5">最近上传活动</h3>
+                        <div class="space-y-4 text-sm" id="recent-activity">
+                            <!-- JS 动态填充 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 素材库 -->
+            <div id="section-library" class="section">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h2 class="text-3xl font-bold">素材库</h2>
+                        <p class="text-slate-500">共 <span id="library-total">24</span> 个视频素材</p>
+                    </div>
+                    
+                    <div class="flex items-center gap-x-3">
+                        <div class="relative">
+                            <input id="library-search" type="text" placeholder="搜索视频名称..." 
+                                   class="pl-10 pr-4 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-2xl text-sm w-72 focus:outline-none focus:border-sky-500">
+                            <i class="fa-solid fa-search absolute left-4 top-3.5 text-slate-400"></i>
+                        </div>
+                        
+                        <button onclick="showUploadModal()" 
+                                class="px-5 py-2.5 bg-sky-600 text-white rounded-2xl flex items-center gap-x-2 hover:bg-sky-700 transition-all active:scale-[0.985]">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>上传视频</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6" id="library-grid">
+                    <!-- 视频卡片由 JS 渲染 -->
+                </div>
+            </div>
+            
+            <!-- 批量上传 -->
+            <div id="section-batch-upload" class="section">
+                <div class="max-w-4xl mx-auto">
+                    <div class="mb-8 text-center">
+                        <h2 class="text-4xl font-bold tracking-tight">批量上传向导</h2>
+                        <p class="text-slate-500 mt-3 text-lg">3 步完成 · 支持最多 50 个视频同时发布</p>
+                    </div>
+                    
+                    <!-- 步骤指示器 -->
+                    <div class="flex justify-center mb-10">
+                        <div class="flex items-center">
+                            <div class="flex items-center">
+                                <div class="step-circle w-9 h-9 bg-sky-600 text-white rounded-full flex items-center justify-center font-bold" id="step-1-circle">1</div>
+                                <div class="ml-3 text-sm font-medium">选择店铺</div>
+                            </div>
+                            <div class="w-16 h-px bg-slate-300 mx-4"></div>
+                            
+                            <div class="flex items-center">
+                                <div class="step-circle w-9 h-9 bg-slate-300 text-slate-600 rounded-full flex items-center justify-center font-bold" id="step-2-circle">2</div>
+                                <div class="ml-3 text-sm font-medium">选择推广户</div>
+                            </div>
+                            <div class="w-16 h-px bg-slate-300 mx-4"></div>
+                            
+                            <div class="flex items-center">
+                                <div class="step-circle w-9 h-9 bg-slate-300 text-slate-600 rounded-full flex items-center justify-center font-bold" id="step-3-circle">3</div>
+                                <div class="ml-3 text-sm font-medium">选择素材 &amp; 设置</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 步骤内容 -->
+                    <div id="step-1" class="step-content">
+                        <div class="bg-white dark:bg-slate-800 rounded-3xl p-8 border border-slate-200 dark:border-slate-700">
+                            <div class="flex justify-between items-center mb-6">
+                                <div>
+                                    <div class="font-semibold text-xl">步骤 1 / 3：选择目标店铺</div>
+                                    <div class="text-sm text-slate-500">可多选，最多支持 20 个店铺同时发布</div>
+                                </div>
+                                <div class="text-sm px-4 py-1.5 bg-emerald-100 text-emerald-700 rounded-full font-medium" id="selected-shops-count">已选 0 个</div>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[380px] overflow-auto custom-scroll pr-2" id="shop-selection">
+                                <!-- JS 动态渲染店铺卡片 -->
+                            </div>
+                            
+                            <div class="mt-8 flex justify-end">
+                                <button onclick="goToStep(2)" class="px-8 py-3 bg-sky-600 text-white rounded-2xl font-medium flex items-center gap-x-2 hover:bg-sky-700 transition-colors">
+                                    下一步 <i class="fa-solid fa-arrow-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="step-2" class="step-content hidden">
+                        <div class="bg-white dark:bg-slate-800 rounded-3xl p-8 border border-slate-200 dark:border-slate-700">
+                            <div class="flex justify-between items-center mb-6">
+                                <div>
+                                    <div class="font-semibold text-xl">步骤 2 / 3：选择推广户</div>
+                                    <div class="text-sm text-slate-500">系统将自动分配给选中的推广户</div>
+                                </div>
+                                <div class="text-sm px-4 py-1.5 bg-emerald-100 text-emerald-700 rounded-full font-medium" id="selected-promoters-count">已选 0 个</div>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[380px] overflow-auto custom-scroll pr-2" id="promoter-selection">
+                                <!-- JS 动态渲染推广户卡片 -->
+                            </div>
+                            
+                            <div class="mt-8 flex justify-between">
+                                <button onclick="goToStep(1)" class="px-6 py-3 border border-slate-300 dark:border-slate-600 rounded-2xl font-medium flex items-center gap-x-2 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                                    <i class="fa-solid fa-arrow-left"></i> 返回
+                                </button>
+                                <button onclick="goToStep(3)" class="px-8 py-3 bg-sky-600 text-white rounded-2xl font-medium flex items-center gap-x-2 hover:bg-sky-700 transition-colors">
+                                    下一步 <i class="fa-solid fa-arrow-right"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="step-3" class="step-content hidden">
+                        <div class="bg-white dark:bg-slate-800 rounded-3xl p-8 border border-slate-200 dark:border-slate-700">
+                            <div class="font-semibold text-xl mb-6">步骤 3 / 3：选择视频素材并配置发布参数</div>
+                            
+                            <div class="mb-6">
+                                <div class="flex justify-between mb-3">
+                                    <div class="font-medium">选择素材（最多 50 个）</div>
+                                    <div class="text-sm text-sky-600 cursor-pointer" onclick="selectAllVideos()">全选当前素材</div>
+                                </div>
+                                
+                                <div class="max-h-64 overflow-auto border border-slate-200 dark:border-slate-700 rounded-2xl p-4 custom-scroll" id="video-selection-list">
+                                    <!-- JS 渲染视频选择列表 -->
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">标题模板</label>
+                                    <input id="title-template" type="text" value="{{店铺名}} | 磁力金牛爆款推荐" 
+                                           class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-2xl text-sm focus:outline-none focus:border-sky-500">
+                                    <div class="text-xs text-slate-400 mt-1">支持变量：{{店铺名}} {{推广户}}</div>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium mb-2">发布时间</label>
+                                    <select id="publish-time" class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-2xl text-sm">
+                                        <option value="now">立即发布</option>
+                                        <option value="1h">1 小时后</option>
+                                        <option value="tomorrow">明天 09:00</option>
+                                        <option value="scheduled">自定义时间...</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="md:col-span-2">
+                                    <label class="block text-sm font-medium mb-2">视频描述（通用）</label>
+                                    <textarea id="description" rows="3" class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-2xl text-sm" placeholder="快手磁力金牛专属爆款视频..."></textarea>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-8 flex justify-between items-center">
+                                <button onclick="goToStep(2)" class="px-6 py-3 border border-slate-300 dark:border-slate-600 rounded-2xl font-medium flex items-center gap-x-2 hover:bg-slate-100 dark:hover:bg-slate-700">
+                                    <i class="fa-solid fa-arrow-left"></i> 返回
+                                </button>
+                                
+                                <button onclick="startBatchUpload()" 
+                                        class="px-10 py-4 bg-gradient-to-r from-sky-600 to-indigo-600 text-white rounded-2xl font-semibold flex items-center gap-x-3 shadow-xl shadow-sky-500/40 hover:brightness-105 transition-all text-lg">
+                                    <i class="fa-solid fa-rocket"></i>
+                                    <span>开始批量上传 (共 <span id="total-selected-count">0</span> 个)</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 店铺管理 -->
+            <div id="section-shops" class="section">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-3xl font-bold">店铺管理</h2>
+                        <p class="text-slate-500">管理已授权的快手电商店铺</p>
+                    </div>
+                    <button onclick="showAddShopModal()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl flex items-center gap-x-2">
+                        <i class="fa-solid fa-plus"></i> <span>添加店铺</span>
+                    </button>
+                </div>
+                
+                <div class="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
+                                <th class="px-8 py-4 text-left font-medium text-sm">店铺名称</th>
+                                <th class="px-6 py-4 text-left font-medium text-sm">店铺ID</th>
+                                <th class="px-6 py-4 text-left font-medium text-sm">状态</th>
+                                <th class="px-6 py-4 text-left font-medium text-sm">最后同步</th>
+                                <th class="px-8 py-4 text-right font-medium text-sm">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="shops-table-body" class="divide-y divide-slate-200 dark:divide-slate-700 text-sm">
+                            <!-- JS 填充 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- 推广户管理 -->
+            <div id="section-promoters" class="section">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-3xl font-bold">推广户管理</h2>
+                        <p class="text-slate-500">管理达人/推广账号</p>
+                    </div>
+                    <button onclick="showAddPromoterModal()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl flex items-center gap-x-2">
+                        <i class="fa-solid fa-user-plus"></i> <span>添加推广户</span>
+                    </button>
+                </div>
+                
+                <div class="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
+                                <th class="px-8 py-4 text-left font-medium text-sm">推广户名称</th>
+                                <th class="px-6 py-4 text-left font-medium text-sm">快手ID</th>
+                                <th class="px-6 py-4 text-left font-medium text-sm">粉丝数</th>
+                                <th class="px-6 py-4 text-left font-medium text-sm">状态</th>
+                                <th class="px-8 py-4 text-right font-medium text-sm">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="promoters-table-body" class="divide-y divide-slate-200 dark:divide-slate-700 text-sm">
+                            <!-- JS 填充 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- 上传历史 -->
+            <div id="section-history" class="section">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-3xl font-bold">上传历史</h2>
+                        <p class="text-slate-500">最近 50 条上传记录</p>
+                    </div>
+                    <button onclick="exportHistory()" class="px-5 py-2.5 border border-slate-300 dark:border-slate-600 rounded-2xl text-sm flex items-center gap-x-2 hover:bg-white dark:hover:bg-slate-800">
+                        <i class="fa-solid fa-download"></i> <span>导出 CSV</span>
+                    </button>
+                </div>
+                
+                <div class="bg-white dark:bg-slate-800 rounded-3xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
+                                <th class="px-8 py-4 text-left font-medium">时间</th>
+                                <th class="px-6 py-4 text-left font-medium">店铺</th>
+                                <th class="px-6 py-4 text-left font-medium">推广户</th>
+                                <th class="px-6 py-4 text-left font-medium">视频数</th>
+                                <th class="px-6 py-4 text-left font-medium">状态</th>
+                                <th class="px-8 py-4 text-right font-medium">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-table-body" class="divide-y divide-slate-200 dark:divide-slate-700">
+                            <!-- JS 填充 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 上传进度模态框 -->
+    <div id="upload-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[100]">
+        <div class="modal bg-white dark:bg-slate-800 w-full max-w-2xl mx-4 rounded-3xl overflow-hidden shadow-2xl">
+            <div class="px-8 py-6 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+                <div>
+                    <div class="font-bold text-2xl">正在批量上传</div>
+                    <div class="text-sm text-slate-500" id="upload-progress-text">正在处理第 1 / 12 个视频...</div>
+                </div>
+                <button onclick="closeUploadModal()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fa-solid fa-times text-2xl"></i>
+                </button>
+            </div>
+            
+            <div class="p-8 max-h-[420px] overflow-auto custom-scroll" id="upload-progress-list">
+                <!-- 动态进度条列表 -->
+            </div>
+            
+            <div class="px-8 py-5 bg-slate-50 dark:bg-slate-900 flex justify-between items-center text-sm">
+                <div id="upload-stats">成功: <span class="text-emerald-600 font-semibold">0</span> / 失败: <span class="text-red-600 font-semibold">0</span></div>
+                <button onclick="retryFailedUploads()" id="retry-btn" class="hidden px-5 py-2 bg-red-600 text-white rounded-2xl text-sm">重试失败项</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 添加店铺模态框 -->
+    <div id="add-shop-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[100]">
+        <div class="modal bg-white dark:bg-slate-800 w-full max-w-md mx-4 rounded-3xl p-8">
+            <div class="font-bold text-2xl mb-6">添加新店铺</div>
+            
+            <div class="space-y-5">
+                <div>
+                    <label class="text-sm font-medium">店铺名称</label>
+                    <input id="new-shop-name" type="text" class="mt-1.5 w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-2xl" placeholder="磁力金牛旗舰店">
+                </div>
+                <div>
+                    <label class="text-sm font-medium">快手店铺ID</label>
+                    <input id="new-shop-id" type="text" class="mt-1.5 w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-2xl" placeholder="KS_SHOP_88291">
+                </div>
+                <div>
+                    <label class="text-sm font-medium">备注</label>
+                    <input id="new-shop-remark" type="text" class="mt-1.5 w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-2xl" placeholder="主推爆款">
+                </div>
+            </div>
+            
+            <div class="mt-8 flex gap-x-4">
+                <button onclick="hideAddShopModal()" class="flex-1 py-3 border border-slate-300 dark:border-slate-600 rounded-2xl font-medium">取消</button>
+                <button onclick="addNewShop()" class="flex-1 py-3 bg-emerald-600 text-white rounded-2xl font-medium">确认添加</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 添加推广户模态框 -->
+    <div id="add-promoter-modal" class="hidden fixed inset-0 bg-black/60 flex items-center justify-center z-[100]">
+        <div class="modal bg-white dark:bg-slate-800 w-full max-w-md mx-4 rounded-3xl p-8">
+            <div class="font-bold text-2xl mb-6">添加推广户</div>
+            
+            <div class="space-y-5">
+                <div>
+                    <label class="text-sm font-medium">推广户名称 / 达人昵称</label>
+                    <input id="new-promoter-name" type="text" class="mt-1.5 w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-2xl" placeholder="科技数码达人">
+                </div>
+                <div>
+                    <label class="text-sm font-medium">快手用户ID</label>
+                    <input id="new-promoter-id" type="text" class="mt-1.5 w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-2xl" placeholder="KS_USER_77421">
+                </div>
+                <div>
+                    <label class="text-sm font-medium">粉丝数</label>
+                    <input id="new-promoter-fans" type="number" value="125000" class="mt-1.5 w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-2xl">
+                </div>
+            </div>
+            
+            <div class="mt-8 flex gap-x-4">
+                <button onclick="hideAddPromoterModal()" class="flex-1 py-3 border border-slate-300 dark:border-slate-600 rounded-2xl font-medium">取消</button>
+                <button onclick="addNewPromoter()" class="flex-1 py-3 bg-emerald-600 text-white rounded-2xl font-medium">确认添加</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Tailwind 配置
+        function initTailwind() {
+            document.documentElement.style.setProperty('--accent', '#0ea5e9');
+            
+            tailwind.config = {
+                darkMode: 'class',
+                theme: {
+                    extend: {
+                        fontFamily: {
+                            'sans': ['Inter', 'Noto Sans SC', 'system-ui', 'sans-serif']
+                        }
+                    }
+                }
+            };
+        }
+        
+        // 全局数据
+        let shops = [];
+        let promoters = [];
+        let videos = [];
+        let uploadHistory = [];
+        let selectedShops = [];
+        let selectedPromoters = [];
+        let selectedVideos = [];
+        
+        // 初始化演示数据
+        function initDemoData() {
+            // 店铺数据
+            shops = [
+                { id: 1, name: "磁力金牛旗舰店", shopId: "KS_SHOP_88291", status: "active", lastSync: "2026-04-24 14:22", remark: "主推爆款" },
+                { id: 2, name: "数码科技专卖店", shopId: "KS_SHOP_99102", status: "active", lastSync: "2026-04-24 11:05", remark: "电子产品" },
+                { id: 3, name: "家居生活馆", shopId: "KS_SHOP_33421", status: "active", lastSync: "2026-04-23 19:40", remark: "家居用品" },
+                { id: 4, name: "美妆护肤中心", shopId: "KS_SHOP_55188", status: "inactive", lastSync: "2026-04-20 09:15", remark: "美妆类目" }
+            ];
+            
+            // 推广户数据
+            promoters = [
+                { id: 1, name: "科技数码达人", kuaishouId: "KS_USER_77421", fans: 125000, status: "active" },
+                { id: 2, name: "生活方式博主", kuaishouId: "KS_USER_99234", fans: 87000, status: "active" },
+                { id: 3, name: "家居好物分享", kuaishouId: "KS_USER_44102", fans: 234000, status: "active" },
+                { id: 4, name: "美妆测评官", kuaishouId: "KS_USER_55678", fans: 156000, status: "active" },
+                { id: 5, name: "快手电商达人", kuaishouId: "KS_USER_88901", fans: 92000, status: "active" }
+            ];
+            
+            // 视频素材 (演示)
+            videos = [
+                { id: 1, name: "磁力金牛爆款手机壳.mp4", duration: "00:42", size: "18.4MB", uploadDate: "2026-04-23", url: "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4", tags: ["手机", "爆款"] },
+                { id: 2, name: "家居收纳神器展示.mp4", duration: "01:15", size: "32.1MB", uploadDate: "2026-04-22", url: "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4", tags: ["家居", "收纳"] },
+                { id: 3, name: "美妆新品试色视频.mp4", duration: "00:58", size: "24.7MB", uploadDate: "2026-04-21", url: "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4", tags: ["美妆", "试色"] },
+                { id: 4, name: "智能手表开箱评测.mp4", duration: "02:03", size: "51.2MB", uploadDate: "2026-04-20", url: "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4", tags: ["数码", "开箱"] },
+                { id: 5, name: "春季新款连衣裙.mp4", duration: "00:37", size: "15.9MB", uploadDate: "2026-04-19", url: "https://sample-videos.com/video123/mp4/720/big_buck_bunny_720p_1mb.mp4", tags: ["服装", "春季"] }
+            ];
+            
+            // 历史记录
+            uploadHistory = [
+                { id: 101, time: "2026-04-24 13:45", shops: ["磁力金牛旗舰店"], promoters: ["科技数码达人"], videoCount: 8, success: 8, failed: 0, status: "success" },
+                { id: 102, time: "2026-04-24 09:20", shops: ["数码科技专卖店"], promoters: ["生活方式博主", "家居好物分享"], videoCount: 15, success: 14, failed: 1, status: "partial" },
+                { id: 103, time: "2026-04-23 18:30", shops: ["家居生活馆", "美妆护肤中心"], promoters: ["美妆测评官"], videoCount: 5, success: 5, failed: 0, status: "success" }
+            ];
+            
+            // 保存到 localStorage
+            saveToLocalStorage();
+        }
+        
+        function saveToLocalStorage() {
+            localStorage.setItem('kuaishou_shops', JSON.stringify(shops));
+            localStorage.setItem('kuaishou_promoters', JSON.stringify(promoters));
+            localStorage.setItem('kuaishou_videos', JSON.stringify(videos));
+            localStorage.setItem('kuaishou_history', JSON.stringify(uploadHistory));
+        }
+        
+        function loadFromLocalStorage() {
+            const savedShops = localStorage.getItem('kuaishou_shops');
+            const savedPromoters = localStorage.getItem('kuaishou_promoters');
+            const savedVideos = localStorage.getItem('kuaishou_videos');
+            const savedHistory = localStorage.getItem('kuaishou_history');
+            
+            if (savedShops) shops = JSON.parse(savedShops);
+            if (savedPromoters) promoters = JSON.parse(savedPromoters);
+            if (savedVideos) videos = JSON.parse(savedVideos);
+            if (savedHistory) uploadHistory = JSON.parse(savedHistory);
+        }
+        
+        // 导航函数
+        function navigateTo(section) {
+            // 隐藏所有 section
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            
+            // 显示目标 section
+            const targetSection = document.getElementById('section-' + section);
+            if (targetSection) targetSection.classList.add('active');
+            
+            // 更新导航高亮
+            document.querySelectorAll('[id^="nav-"]').forEach(nav => nav.classList.remove('nav-active'));
+            const activeNav = document.getElementById('nav-' + section);
+            if (activeNav) activeNav.classList.add('nav-active');
+            
+            // 特殊处理
+            if (section === 'library') {
+                renderLibrary();
+            } else if (section === 'shops') {
+                renderShopsTable();
+            } else if (section === 'promoters') {
+                renderPromotersTable();
+            } else if (section === 'history') {
+                renderHistoryTable();
+            } else if (section === 'dashboard') {
+                updateDashboardStats();
+            }
+        }
+        
+        // 更新仪表盘统计
+        function updateDashboardStats() {
+            document.getElementById('today-upload').textContent = Math.floor(Math.random() * 80) + 140;
+            document.getElementById('connected-shops').textContent = shops.filter(s => s.status === 'active').length;
+            document.getElementById('connected-promoters').textContent = promoters.filter(p => p.status === 'active').length;
+            
+            // 最近活动
+            const container = document.getElementById('recent-activity');
+            container.innerHTML = '';
+            
+            uploadHistory.slice(0, 3).forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'flex items-start gap-x-4 py-3 border-b border-slate-100 dark:border-slate-700 last:border-0';
+                div.innerHTML = `
+                    <div class="mt-1">
+                        <i class="fa-solid fa-check-circle text-emerald-500"></i>
+                    </div>
+                    <div class="flex-1 text-sm">
+                        <div class="font-medium">${item.shops[0]} · ${item.promoters[0]}</div>
+                        <div class="text-xs text-slate-500 mt-0.5">${item.time} · 成功 ${item.success}/${item.videoCount}</div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+        
+        // 渲染素材库
+        function renderLibrary(filteredVideos = null) {
+            const grid = document.getElementById('library-grid');
+            grid.innerHTML = '';
+            
+            const list = filteredVideos || videos;
+            document.getElementById('library-total').textContent = list.length;
+            document.getElementById('library-count').textContent = list.length;
+            
+            if (list.length === 0) {
+                grid.innerHTML = `<div class="col-span-full py-16 text-center text-slate-400"><i class="fa-solid fa-video-slash text-5xl mb-4"></i><div>暂无视频素材</div></div>`;
+                return;
+            }
+            
+            list.forEach(video => {
+                const card = document.createElement('div');
+                card.className = `video-card bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-3xl overflow-hidden cursor-pointer`;
+                card.innerHTML = `
+                    <div class="relative aspect-video bg-slate-900 flex items-center justify-center">
+                        <video class="w-full h-full object-cover" muted loop>
+                            <source src="${video.url}" type="video/mp4">
+                        </video>
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+                        <div class="absolute bottom-3 left-3 right-3 flex justify-between items-end">
+                            <div class="text-white text-xs font-medium bg-black/60 px-2.5 py-0.5 rounded">${video.duration}</div>
+                            <div class="text-white text-xs font-medium">${video.size}</div>
+                        </div>
+                        <div class="absolute top-3 right-3 bg-white/90 dark:bg-slate-800 text-[10px] px-2 py-px rounded font-mono">${video.id}</div>
+                    </div>
+                    <div class="p-4">
+                        <div class="font-semibold text-sm line-clamp-2 mb-3">${video.name}</div>
+                        
+                        <div class="flex flex-wrap gap-1.5 mb-3">
+                            ${video.tags.map(tag => `<span class="text-[10px] px-2 py-px bg-slate-100 dark:bg-slate-700 rounded">${tag}</span>`).join('')}
+                        </div>
+                        
+                        <div class="flex items-center justify-between text-xs text-slate-500">
+                            <div>上传于 ${video.uploadDate}</div>
+                            <div class="flex items-center gap-x-2">
+                                <button onclick="event.stopImmediatePropagation(); deleteVideo(${video.id});" class="text-red-500 hover:text-red-600"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // 点击预览
+                card.onclick = () => showVideoPreview(video);
+                
+                grid.appendChild(card);
+            });
+            
+            // 搜索功能
+            const searchInput = document.getElementById('library-search');
+            if (searchInput) {
+                searchInput.oninput = () => {
+                    const keyword = searchInput.value.toLowerCase().trim();
+                    if (!keyword) {
+                        renderLibrary();
+                        return;
+                    }
+                    
+                    const filtered = videos.filter(v => 
+                        v.name.toLowerCase().includes(keyword) || 
+                        v.tags.join(' ').toLowerCase().includes(keyword)
+                    );
+                    renderLibrary(filtered);
+                };
+            }
+        }
+        
+        function showVideoPreview(video) {
+            const modal = document.createElement('div');
+            modal.className = `fixed inset-0 bg-black/80 flex items-center justify-center z-[200]`;
+            modal.innerHTML = `
+                <div class="max-w-4xl w-full mx-4 bg-white dark:bg-slate-800 rounded-3xl overflow-hidden">
+                    <div class="flex justify-between items-center px-8 py-5 border-b">
+                        <div>
+                            <div class="font-bold">${video.name}</div>
+                            <div class="text-xs text-slate-500">${video.duration} · ${video.size}</div>
+                        </div>
+                        <button onclick="this.closest('.fixed').remove()" class="text-3xl leading-none text-slate-400 hover:text-slate-600">&times;</button>
+                    </div>
+                    
+                    <div class="p-6 bg-black">
+                        <video controls autoplay class="w-full rounded-2xl max-h-[520px]">
+                            <source src="${video.url}" type="video/mp4">
+                        </video>
+                    </div>
+                    
+                    <div class="px-8 py-5 flex items-center justify-between text-sm">
+                        <div class="flex gap-x-2">
+                            ${video.tags.map(t => `<span class="px-3 py-1 bg-slate-100 dark:bg-slate-700 rounded-2xl text-xs">${t}</span>`).join('')}
+                        </div>
+                        <div class="flex gap-x-3">
+                            <button onclick="downloadVideo(${video.id}, this)" class="px-5 py-2 flex items-center gap-x-2 border border-slate-300 dark:border-slate-600 rounded-2xl text-sm">
+                                <i class="fa-solid fa-download"></i> <span>下载</span>
+                            </button>
+                            <button onclick="useInBatchUpload(${video.id}, this.closest('.fixed'))" class="px-6 py-2 bg-sky-600 text-white rounded-2xl text-sm flex items-center gap-x-2">
+                                <i class="fa-solid fa-upload"></i> <span>用于批量上传</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        
+        function downloadVideo(videoId, btn) {
+            const video = videos.find(v => v.id === videoId);
+            if (!video) return;
+            
+            const a = document.createElement('a');
+            a.href = video.url;
+            a.download = video.name;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            
+            btn.innerHTML = `<i class="fa-solid fa-check"></i> <span>已下载</span>`;
+            setTimeout(() => btn.closest('.fixed').remove(), 800);
+        }
+        
+        function useInBatchUpload(videoId, modal) {
+            modal.remove();
+            navigateTo('batch-upload');
+            
+            // 自动选中该视频
+            setTimeout(() => {
+                selectedVideos = [videoId];
+                // 跳转到第3步
+                goToStep(3);
+                // 高亮选中
+                setTimeout(() => {
+                    const checkbox = document.querySelector(`#video-select-${videoId}`);
+                    if (checkbox) checkbox.checked = true;
+                    updateSelectedCount();
+                }, 300);
+            }, 400);
+        }
+        
+        function deleteVideo(videoId) {
+            if (!confirm('确定删除这个视频素材吗？')) return;
+            
+            videos = videos.filter(v => v.id !== videoId);
+            saveToLocalStorage();
+            renderLibrary();
+            
+            // 同时从选中列表中移除
+            selectedVideos = selectedVideos.filter(id => id !== videoId);
+        }
+        
+        // 上传视频
+        function showUploadModal() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'video/mp4,video/quicktime,video/*';
+            input.multiple = true;
+            
+            input.onchange = (e) => {
+                const files = Array.from(e.target.files);
+                handleVideoFiles(files);
+            };
+            
+            input.click();
+        }
+        
+        function handleVideoFiles(files) {
+            files.forEach(file => {
+                if (!file.type.startsWith('video/')) {
+                    alert('只支持视频文件！');
+                    return;
+                }
+                
+                const videoUrl = URL.createObjectURL(file);
+                
+                // 获取视频时长
+                const tempVideo = document.createElement('video');
+                tempVideo.src = videoUrl;
+                
+                tempVideo.onloadedmetadata = () => {
+                    const duration = Math.floor(tempVideo.duration);
+                    const min = Math.floor(duration / 60).toString().padStart(2, '0');
+                    const sec = (duration % 60).toString().padStart(2, '0');
+                    
+                    const newVideo = {
+                        id: Date.now() + Math.floor(Math.random() * 1000),
+                        name: file.name,
+                        duration: `${min}:${sec}`,
+                        size: (file.size / (1024 * 1024)).toFixed(1) + 'MB',
+                        uploadDate: new Date().toISOString().split('T')[0],
+                        url: videoUrl,
+                        tags: ['新上传']
+                    };
+                    
+                    videos.unshift(newVideo);
+                    saveToLocalStorage();
+                    renderLibrary();
+                    
+                    // 提示
+                    const toast = document.createElement('div');
+                    toast.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 bg-emerald-600 text-white px-6 py-3 rounded-3xl shadow-xl flex items-center gap-x-3 z-[300]';
+                    toast.innerHTML = `<i class="fa-solid fa-check-circle"></i> <span>${file.name} 上传成功！</span>`;
+                    document.body.appendChild(toast);
+                    
+                    setTimeout(() => {
+                        toast.style.transition = 'all 0.3s';
+                        toast.style.opacity = '0';
+                        setTimeout(() => toast.remove(), 300);
+                    }, 2200);
+                };
+            });
+        }
+        
+        // 步骤管理
+        let currentStep = 1;
+        
+        function goToStep(step) {
+            // 隐藏所有步骤
+            document.querySelectorAll('.step-content').forEach(el => el.classList.add('hidden'));
+            
+            // 显示目标步骤
+            document.getElementById('step-' + step).classList.remove('hidden');
+            
+            // 更新圆圈状态
+            for (let i = 1; i <= 3; i++) {
+                const circle = document.getElementById('step-' + i + '-circle');
+                if (circle) {
+                    if (i < step) {
+                        circle.className = 'step-circle w-9 h-9 bg-emerald-500 text-white rounded-full flex items-center justify-center font-bold';
+                        circle.innerHTML = '<i class="fa-solid fa-check"></i>';
+                    } else if (i === step) {
+                        circle.className = 'step-circle w-9 h-9 bg-sky-600 text-white rounded-full flex items-center justify-center font-bold';
+                        circle.innerHTML = i;
+                    } else {
+                        circle.className = 'step-circle w-9 h-9 bg-slate-300 text-slate-600 rounded-full flex items-center justify-center font-bold';
+                        circle.innerHTML = i;
+                    }
+                }
+            }
+            
+            currentStep = step;
+            
+            // 加载对应数据
+            if (step === 1) {
+                renderShopSelection();
+            } else if (step === 2) {
+                renderPromoterSelection();
+            } else if (step === 3) {
+                renderVideoSelection();
+            }
+        }
+        
+        function renderShopSelection() {
+            const container = document.getElementById('shop-selection');
+            container.innerHTML = '';
+            
+            shops.forEach(shop => {
+                const isSelected = selectedShops.includes(shop.id);
+                
+                const card = document.createElement('div');
+                card.className = `p-5 border rounded-2xl cursor-pointer transition-all flex items-start gap-x-4 ${isSelected ? 'border-sky-500 bg-sky-50 dark:bg-sky-950' : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'}`;
+                
+                card.innerHTML = `
+                    <div class="flex-1">
+                        <div class="font-semibold">${shop.name}</div>
+                        <div class="text-xs text-slate-500 mt-1">${shop.shopId}</div>
+                        <div class="mt-3 flex items-center gap-x-2">
+                            <span class="inline-block w-2 h-2 rounded-full ${shop.status === 'active' ? 'bg-emerald-500' : 'bg-slate-400'}"></span>
+                            <span class="text-xs ${shop.status === 'active' ? 'text-emerald-600' : 'text-slate-400'}">${shop.status === 'active' ? '已授权' : '未授权'}</span>
+                        </div>
+                    </div>
+                    <div class="mt-1">
+                        <input type="checkbox" ${isSelected ? 'checked' : ''} class="w-5 h-5 accent-sky-600">
+                    </div>
+                `;
+                
+                card.onclick = (e) => {
+                    if (e.target.tagName === 'INPUT') return;
+                    
+                    const checkbox = card.querySelector('input');
+                    checkbox.checked = !checkbox.checked;
+                    
+                    if (checkbox.checked) {
+                        if (!selectedShops.includes(shop.id)) selectedShops.push(shop.id);
+                        card.classList.add('border-sky-500', 'bg-sky-50', 'dark:bg-sky-950');
+                    } else {
+                        selectedShops = selectedShops.filter(id => id !== shop.id);
+                        card.classList.remove('border-sky-500', 'bg-sky-50', 'dark:bg-sky-950');
+                    }
+                    
+                    updateSelectedShopsCount();
+                };
+                
+                container.appendChild(card);
+            });
+            
+            updateSelectedShopsCount();
+        }
+        
+        function updateSelectedShopsCount() {
+            document.getElementById('selected-shops-count').textContent = `已选 ${selectedShops.length} 个`;
+        }
+        
+        function renderPromoterSelection() {
+            const container = document.getElementById('promoter-selection');
+            container.innerHTML = '';
+            
+            promoters.forEach(promoter => {
+                const isSelected = selectedPromoters.includes(promoter.id);
+                
+                const card = document.createElement('div');
+                card.className = `p-5 border rounded-2xl cursor-pointer transition-all flex items-start gap-x-4 ${isSelected ? 'border-sky-500 bg-sky-50 dark:bg-sky-950' : 'border-slate-200 dark:border-slate-700 hover:border-slate-300'}`;
+                
+                card.innerHTML = `
+                    <div class="flex-1">
+                        <div class="font-semibold">${promoter.name}</div>
+                        <div class="text-xs text-slate-500 mt-1">${promoter.kuaishouId}</div>
+                        
+                        <div class="mt-3 flex items-center justify-between">
+                            <div class="text-xs">
+                                <span class="font-mono">${(promoter.fans / 10000).toFixed(1)}万</span> 粉丝
+                            </div>
+                            <span class="px-2.5 py-px text-xs rounded ${promoter.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'}">${promoter.status === 'active' ? '活跃' : '休眠'}</span>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <input type="checkbox" ${isSelected ? 'checked' : ''} class="w-5 h-5 accent-sky-600">
+                    </div>
+                `;
+                
+                card.onclick = (e) => {
+                    if (e.target.tagName === 'INPUT') return;
+                    
+                    const checkbox = card.querySelector('input');
+                    checkbox.checked = !checkbox.checked;
+                    
+                    if (checkbox.checked) {
+                        if (!selectedPromoters.includes(promoter.id)) selectedPromoters.push(promoter.id);
+                        card.classList.add('border-sky-500', 'bg-sky-50', 'dark:bg-sky-950');
+                    } else {
+                        selectedPromoters = selectedPromoters.filter(id => id !== promoter.id);
+                        card.classList.remove('border-sky-500', 'bg-sky-50', 'dark:bg-sky-950');
+                    }
+                    
+                    updateSelectedPromotersCount();
+                };
+                
+                container.appendChild(card);
+            });
+            
+            updateSelectedPromotersCount();
+        }
+        
+        function updateSelectedPromotersCount() {
+            document.getElementById('selected-promoters-count').textContent = `已选 ${selectedPromoters.length} 个`;
+        }
+        
+        function renderVideoSelection() {
+            const container = document.getElementById('video-selection-list');
+            container.innerHTML = '';
+            
+            if (videos.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 text-slate-400">素材库为空，请先上传视频</div>`;
+                return;
+            }
+            
+            videos.forEach(video => {
+                const isSelected = selectedVideos.includes(video.id);
+                
+                const item = document.createElement('div');
+                item.className = `flex items-center gap-x-4 p-3 rounded-2xl mb-2 cursor-pointer ${isSelected ? 'bg-sky-50 dark:bg-sky-950 border border-sky-200' : 'hover:bg-slate-50 dark:hover:bg-slate-700'}`;
+                
+                item.innerHTML = `
+                    <div class="flex items-center gap-x-3 flex-1 min-w-0">
+                        <input type="checkbox" id="video-select-${video.id}" ${isSelected ? 'checked' : ''} class="w-4 h-4 accent-sky-600 flex-shrink-0">
+                        
+                        <div class="flex-1 min-w-0">
+                            <div class="font-medium text-sm truncate">${video.name}</div>
+                            <div class="text-xs text-slate-500 flex items-center gap-x-2 mt-0.5">
+                                <span>${video.duration}</span>
+                                <span class="text-[10px]">·</span>
+                                <span>${video.size}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="text-xs px-3 py-1 bg-slate-100 dark:bg-slate-700 rounded font-mono flex-shrink-0">${video.tags[0] || ''}</div>
+                `;
+                
+                const checkbox = item.querySelector('input');
+                checkbox.onchange = () => {
+                    if (checkbox.checked) {
+                        if (!selectedVideos.includes(video.id)) selectedVideos.push(video.id);
+                    } else {
+                        selectedVideos = selectedVideos.filter(id => id !== video.id);
+                    }
+                    updateSelectedCount();
+                };
+                
+                item.onclick = (e) => {
+                    if (e.target.tagName !== 'INPUT') {
+                        checkbox.checked = !checkbox.checked;
+                        checkbox.onchange();
+                    }
+                };
+                
+                container.appendChild(item);
+            });
+            
+            updateSelectedCount();
+        }
+        
+        function updateSelectedCount() {
+            const countEl = document.getElementById('total-selected-count');
+            if (countEl) countEl.textContent = selectedVideos.length;
+        }
+        
+        function selectAllVideos() {
+            selectedVideos = videos.map(v => v.id);
+            
+            // 更新所有 checkbox
+            document.querySelectorAll('#video-selection-list input[type="checkbox"]').forEach(cb => {
+                cb.checked = true;
+            });
+            
+            updateSelectedCount();
+        }
+        
+        // 开始批量上传
+        async function startBatchUpload() {
+            if (selectedShops.length === 0) {
+                alert('请至少选择一个店铺！');
+                return;
+            }
+            if (selectedPromoters.length === 0) {
+                alert('请至少选择一个推广户！');
+                return;
+            }
+            if (selectedVideos.length === 0) {
+                alert('请至少选择一个视频素材！');
+                return;
+            }
+            
+            const modal = document.getElementById('upload-modal');
+            modal.classList.remove('hidden');
+            modal.style.display = 'flex';
+            
+            const progressList = document.getElementById('upload-progress-list');
+            progressList.innerHTML = '';
+            
+            const titleTemplate = document.getElementById('title-template').value;
+            const description = document.getElementById('description').value || '磁力金牛专属推广视频';
+            const publishTime = document.getElementById('publish-time').value;
+            
+            let successCount = 0;
+            let failedCount = 0;
+            const uploadTasks = [];
+            
+            // 为每个组合创建上传任务
+            for (const shopId of selectedShops) {
+                const shop = shops.find(s => s.id === shopId);
+                if (!shop) continue;
+                
+                for (const promoterId of selectedPromoters) {
+                    const promoter = promoters.find(p => p.id === promoterId);
+                    if (!promoter) continue;
+                    
+                    for (const videoId of selectedVideos) {
+                        const video = videos.find(v => v.id === videoId);
+                        if (!video) continue;
+                        
+                        const taskId = Date.now() + Math.random();
+                        
+                        const taskDiv = document.createElement('div');
+                        taskDiv.id = `task-${taskId}`;
+                        taskDiv.className = `flex items-center gap-x-4 py-4 border-b border-slate-100 dark:border-slate-700 last:border-0`;
+                        
+                        taskDiv.innerHTML = `
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-x-3">
+                                    <div class="font-medium text-sm truncate">${video.name}</div>
+                                    <div class="text-xs px-2 py-px rounded bg-slate-200 dark:bg-slate-700 flex-shrink-0">${shop.name}</div>
+                                </div>
+                                <div class="text-xs text-slate-500 mt-1">${promoter.name} · ${new Date().toLocaleTimeString()}</div>
+                            </div>
+                            
+                            <div class="w-48">
+                                <div class="flex items-center gap-x-2 text-xs mb-1.5">
+                                    <div class="flex-1 bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+                                        <div class="progress-bar h-1.5 bg-sky-500 w-0 transition-all" id="progress-${taskId}"></div>
+                                    </div>
+                                    <div class="font-mono w-9 text-right text-sky-600" id="percent-${taskId}">0%</div>
+                                </div>
+                            </div>
+                            
+                            <div class="w-20 text-right">
+                                <span id="status-${taskId}" class="px-3 py-px text-xs font-medium rounded-full bg-amber-100 text-amber-700">上传中</span>
+                            </div>
+                        `;
+                        
+                        progressList.appendChild(taskDiv);
+                        
+                        uploadTasks.push({
+                            taskId,
+                            shop,
+                            promoter,
+                            video,
+                            titleTemplate,
+                            description,
+                            publishTime,
+                            taskDiv
+                        });
+                    }
+                }
+            }
+            
+            // 模拟并发上传 (每批 3 个)
+            document.getElementById('upload-progress-text').innerHTML = `正在处理第 <span class="font-mono">1</span> / ${uploadTasks.length} 个视频...`;
+            
+            for (let i = 0; i < uploadTasks.length; i++) {
+                const task = uploadTasks[i];
+                const progressBar = document.getElementById(`progress-${task.taskId}`);
+                const percentEl = document.getElementById(`percent-${task.taskId}`);
+                const statusEl = document.getElementById(`status-${task.taskId}`);
+                
+                // 更新进度文字
+                document.getElementById('upload-progress-text').innerHTML = `正在处理第 <span class="font-mono">${i+1}</span> / ${uploadTasks.length} 个视频...`;
+                
+                // 模拟上传进度
+                for (let p = 0; p <= 100; p += Math.floor(Math.random() * 18) + 12) {
+                    if (p > 100) p = 100;
+                    
+                    progressBar.style.width = `${p}%`;
+                    percentEl.textContent = `${p}%`;
+                    
+                    await new Promise(resolve => setTimeout(resolve, 80));
+                }
+                
+                // 模拟 API 结果 (80% 成功率)
+                const success = Math.random() > 0.2;
+                
+                if (success) {
+                    successCount++;
+                    statusEl.className = 'px-3 py-px text-xs font-medium rounded-full bg-emerald-100 text-emerald-700';
+                    statusEl.textContent = '成功';
+                    
+                    // 记录到历史
+                    const historyItem = {
+                        id: Date.now(),
+                        time: new Date().toISOString().replace('T', ' ').substring(0, 16),
+                        shops: [task.shop.name],
+                        promoters: [task.promoter.name],
+                        videoCount: 1,
+                        success: 1,
+                        failed: 0,
+                        status: 'success'
+                    };
+                    uploadHistory.unshift(historyItem);
+                } else {
+                    failedCount++;
+                    statusEl.className = 'px-3 py-px text-xs font-medium rounded-full bg-red-100 text-red-700';
+                    statusEl.textContent = '失败';
+                    
+                    // 添加重试按钮
+                    const retryBtn = document.createElement('button');
+                    retryBtn.className = 'ml-2 text-xs text-red-600 hover:underline';
+                    retryBtn.textContent = '重试';
+                    retryBtn.onclick = () => retrySingleUpload(task, statusEl, progressBar, percentEl, retryBtn);
+                    statusEl.parentNode.appendChild(retryBtn);
+                }
+                
+                // 更新统计
+                document.getElementById('upload-stats').innerHTML = `成功: <span class="text-emerald-600 font-semibold">${successCount}</span> / 失败: <span class="text-red-600 font-semibold">${failedCount}</span>`;
+                
+                await new Promise(resolve => setTimeout(resolve, 180));
+            }
+            
+            // 完成
+            saveToLocalStorage();
+            
+            setTimeout(() => {
+                document.getElementById('upload-progress-text').innerHTML = `上传完成！成功 ${successCount} 个，失败 ${failedCount} 个`;
+                
+                if (failedCount > 0) {
+                    document.getElementById('retry-btn').classList.remove('hidden');
+                    document.getElementById('retry-btn').onclick = () => retryFailedUploads(uploadTasks);
+                } else {
+                    setTimeout(() => {
+                        closeUploadModal();
+                        alert('🎉 所有视频批量上传成功！');
+                        navigateTo('history');
+                    }, 1500);
+                }
+            }, 800);
+        }
+        
+        function retrySingleUpload(task, statusEl, progressBar, percentEl, retryBtn) {
+            statusEl.textContent = '重试中...';
+            statusEl.className = 'px-3 py-px text-xs font-medium rounded-full bg-amber-100 text-amber-700';
+            retryBtn.remove();
+            
+            progressBar.style.width = '0%';
+            percentEl.textContent = '0%';
+            
+            setTimeout(async () => {
+                for (let p = 0; p <= 100; p += 20) {
+                    progressBar.style.width = `${p}%`;
+                    percentEl.textContent = `${p}%`;
+                    await new Promise(r => setTimeout(r, 60));
+                }
+                
+                statusEl.className = 'px-3 py-px text-xs font-medium rounded-full bg-emerald-100 text-emerald-700';
+                statusEl.textContent = '成功';
+                
+                // 更新历史
+                const historyItem = {
+                    id: Date.now(),
+                    time: new Date().toISOString().replace('T', ' ').substring(0, 16),
+                    shops: [task.shop.name],
+                    promoters: [task.promoter.name],
+                    videoCount: 1,
+                    success: 1,
+                    failed: 0,
+                    status: 'success'
+                };
+                uploadHistory.unshift(historyItem);
+                saveToLocalStorage();
+            }, 300);
+        }
+        
+        function retryFailedUploads(uploadTasks = null) {
+            // 简化实现：重新打开模态框并模拟重试所有失败项
+            alert('已重新尝试失败的上传任务！（演示模式）');
+            closeUploadModal();
+            
+            // 实际项目中这里会重新发起失败的任务
+            setTimeout(() => {
+                navigateTo('history');
+            }, 600);
+        }
+        
+        function closeUploadModal() {
+            const modal = document.getElementById('upload-modal');
+            modal.style.display = 'none';
+            modal.classList.add('hidden');
+            
+            // 重置选择
+            selectedShops = [];
+            selectedPromoters = [];
+            selectedVideos = [];
+            
+            // 返回仪表盘
+            setTimeout(() => {
+                navigateTo('dashboard');
+            }, 400);
+        }
+        
+        // 店铺表格渲染
+        function renderShopsTable() {
+            const tbody = document.getElementById('shops-table-body');
+            tbody.innerHTML = '';
+            
+            shops.forEach(shop => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-700/50';
+                
+                tr.innerHTML = `
+                    <td class="px-8 py-4 font-medium">${shop.name}</td>
+                    <td class="px-6 py-4 font-mono text-xs text-slate-500">${shop.shopId}</td>
+                    <td class="px-6 py-4">
+                        <span class="px-3 py-1 text-xs rounded-full ${shop.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'}">
+                            ${shop.status === 'active' ? '已授权' : '未授权'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-xs text-slate-500">${shop.lastSync}</td>
+                    <td class="px-8 py-4 text-right">
+                        <button onclick="editShop(${shop.id})" class="px-4 py-1 text-xs hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl mr-2">编辑</button>
+                        <button onclick="deleteShop(${shop.id})" class="px-4 py-1 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-950 rounded-xl">删除</button>
+                    </td>
+                `;
+                
+                tbody.appendChild(tr);
+            });
+        }
+        
+        function showAddShopModal() {
+            document.getElementById('add-shop-modal').classList.remove('hidden');
+            document.getElementById('add-shop-modal').style.display = 'flex';
+            
+            // 清空表单
+            document.getElementById('new-shop-name').value = '';
+            document.getElementById('new-shop-id').value = 'KS_SHOP_' + Math.floor(10000 + Math.random() * 90000);
+            document.getElementById('new-shop-remark').value = '';
+        }
+        
+        function hideAddShopModal() {
+            const modal = document.getElementById('add-shop-modal');
+            modal.style.display = 'none';
+            modal.classList.add('hidden');
+        }
+        
+        function addNewShop() {
+            const name = document.getElementById('new-shop-name').value.trim() || '新店铺';
+            const shopId = document.getElementById('new-shop-id').value.trim();
+            const remark = document.getElementById('new-shop-remark').value.trim();
+            
+            const newShop = {
+                id: Date.now(),
+                name,
+                shopId,
+                status: 'active',
+                lastSync: new Date().toISOString().replace('T', ' ').substring(0, 16),
+                remark
+            };
+            
+            shops.push(newShop);
+            saveToLocalStorage();
+            renderShopsTable();
+            hideAddShopModal();
+            
+            // 提示
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-6 right-6 bg-emerald-600 text-white px-6 py-3 rounded-3xl shadow-xl flex items-center gap-x-3 z-[300]';
+            toast.innerHTML = `店铺 <strong>${name}</strong> 添加成功`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2500);
+        }
+        
+        function editShop(shopId) {
+            const shop = shops.find(s => s.id === shopId);
+            if (!shop) return;
+            
+            const newName = prompt('修改店铺名称：', shop.name);
+            if (newName === null) return;
+            
+            shop.name = newName.trim() || shop.name;
+            
+            const newRemark = prompt('修改备注：', shop.remark || '');
+            if (newRemark !== null) shop.remark = newRemark.trim();
+            
+            saveToLocalStorage();
+            renderShopsTable();
+        }
+        
+        function deleteShop(shopId) {
+            if (!confirm('确定删除这个店铺吗？')) return;
+            
+            shops = shops.filter(s => s.id !== shopId);
+            saveToLocalStorage();
+            renderShopsTable();
+        }
+        
+        // 推广户表格
+        function renderPromotersTable() {
+            const tbody = document.getElementById('promoters-table-body');
+            tbody.innerHTML = '';
+            
+            promoters.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-700/50';
+                
+                tr.innerHTML = `
+                    <td class="px-8 py-4 font-medium">${p.name}</td>
+                    <td class="px-6 py-4 font-mono text-xs text-slate-500">${p.kuaishouId}</td>
+                    <td class="px-6 py-4 text-sm">${(p.fans / 10000).toFixed(1)} 万</td>
+                    <td class="px-6 py-4">
+                        <span class="px-3 py-1 text-xs rounded-full ${p.status === 'active' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'}">
+                            ${p.status === 'active' ? '活跃' : '休眠'}
+                        </span>
+                    </td>
+                    <td class="px-8 py-4 text-right">
+                        <button onclick="editPromoter(${p.id})" class="px-4 py-1 text-xs hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl mr-2">编辑</button>
+                        <button onclick="deletePromoter(${p.id})" class="px-4 py-1 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-950 rounded-xl">删除</button>
+                    </td>
+                `;
+                
+                tbody.appendChild(tr);
+            });
+        }
+        
+        function showAddPromoterModal() {
+            document.getElementById('add-promoter-modal').classList.remove('hidden');
+            document.getElementById('add-promoter-modal').style.display = 'flex';
+            
+            document.getElementById('new-promoter-name').value = '';
+            document.getElementById('new-promoter-id').value = 'KS_USER_' + Math.floor(10000 + Math.random() * 90000);
+            document.getElementById('new-promoter-fans').value = Math.floor(Math.random() * 200000) + 30000;
+        }
+        
+        function hideAddPromoterModal() {
+            const modal = document.getElementById('add-promoter-modal');
+            modal.style.display = 'none';
+            modal.classList.add('hidden');
+        }
+        
+        function addNewPromoter() {
+            const name = document.getElementById('new-promoter-name').value.trim() || '新推广户';
+            const kuaishouId = document.getElementById('new-promoter-id').value.trim();
+            const fans = parseInt(document.getElementById('new-promoter-fans').value) || 50000;
+            
+            const newPromoter = {
+                id: Date.now(),
+                name,
+                kuaishouId,
+                fans,
+                status: 'active'
+            };
+            
+            promoters.push(newPromoter);
+            saveToLocalStorage();
+            renderPromotersTable();
+            hideAddPromoterModal();
+        }
+        
+        function editPromoter(promoterId) {
+            const p = promoters.find(item => item.id === promoterId);
+            if (!p) return;
+            
+            const newName = prompt('修改推广户名称：', p.name);
+            if (newName !== null) p.name = newName.trim();
+            
+            const newFans = prompt('修改粉丝数：', p.fans);
+            if (newFans !== null) p.fans = parseInt(newFans) || p.fans;
+            
+            saveToLocalStorage();
+            renderPromotersTable();
+        }
+        
+        function deletePromoter(promoterId) {
+            if (!confirm('确定删除这个推广户吗？')) return;
+            
+            promoters = promoters.filter(p => p.id !== promoterId);
+            saveToLocalStorage();
+            renderPromotersTable();
+        }
+        
+        // 历史记录表格
+        function renderHistoryTable() {
+            const tbody = document.getElementById('history-table-body');
+            tbody.innerHTML = '';
+            
+            if (uploadHistory.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="px-8 py-12 text-center text-slate-400">暂无上传记录</td></tr>`;
+                return;
+            }
+            
+            uploadHistory.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 dark:hover:bg-slate-700/50';
+                
+                const statusHtml = item.status === 'success' 
+                    ? `<span class="px-3 py-1 text-xs rounded-full bg-emerald-100 text-emerald-700">全部成功</span>`
+                    : `<span class="px-3 py-1 text-xs rounded-full bg-amber-100 text-amber-700">部分成功</span>`;
+                
+                tr.innerHTML = `
+                    <td class="px-8 py-4 text-xs text-slate-500 font-mono">${item.time}</td>
+                    <td class="px-6 py-4 text-sm">${item.shops.join(', ')}</td>
+                    <td class="px-6 py-4 text-sm">${item.promoters.join(', ')}</td>
+                    <td class="px-6 py-4"><span class="font-mono">${item.videoCount}</span> 个</td>
+                    <td class="px-6 py-4">${statusHtml}</td>
+                    <td class="px-8 py-4 text-right">
+                        <button onclick="viewHistoryDetail(${item.id})" class="px-4 py-1 text-xs hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl">详情</button>
+                    </td>
+                `;
+                
+                tbody.appendChild(tr);
+            });
+        }
+        
+        function viewHistoryDetail(historyId) {
+            const item = uploadHistory.find(h => h.id === historyId);
+            if (!item) return;
+            
+            alert(`上传详情\n\n时间: ${item.time}\n店铺: ${item.shops.join('、')}\n推广户: ${item.promoters.join('、')}\n视频数量: ${item.videoCount}\n成功: ${item.success} / 失败: ${item.failed}`);
+        }
+        
+        function exportHistory() {
+            if (uploadHistory.length === 0) {
+                alert('没有可导出的记录');
+                return;
+            }
+            
+            let csv = '时间,店铺,推广户,视频数,成功数,失败数\n';
+            
+            uploadHistory.forEach(item => {
+                csv += `"${item.time}","${item.shops.join(';')}","${item.promoters.join(';')}",${item.videoCount},${item.success},${item.failed}\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `磁力金牛上传历史_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        }
+        
+        // API 设置
+        function showSettings() {
+            const modal = document.createElement('div');
+            modal.className = `fixed inset-0 bg-black/70 flex items-center justify-center z-[200]`;
+            
+            modal.innerHTML = `
+                <div class="modal bg-white dark:bg-slate-800 w-full max-w-lg mx-4 rounded-3xl p-8">
+                    <div class="flex justify-between items-center mb-8">
+                        <div class="font-bold text-2xl">API 配置</div>
+                        <button onclick="this.closest('.fixed').remove()" class="text-3xl text-slate-400">&times;</button>
+                    </div>
+                    
+                    <div class="space-y-6 text-sm">
+                        <div>
+                            <label class="block font-medium mb-2">快手开放平台 App Key</label>
+                            <input type="text" value="ks_app_8f2k9p3m" class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-2xl font-mono text-xs">
+                        </div>
+                        
+                        <div>
+                            <label class="block font-medium mb-2">App Secret</label>
+                            <input type="password" value="************************" class="w-full px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-2xl font-mono text-xs">
+                        </div>
+                        
+                        <div>
+                            <label class="block font-medium mb-2">Access Token</label>
+                            <div class="flex gap-x-3">
+                                <input type="text" value="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." class="flex-1 px-4 py-3 border border-slate-300 dark:border-slate-600 rounded-2xl font-mono text-xs">
+                                <button onclick="simulateOAuth()" class="px-5 whitespace-nowrap bg-slate-800 text-white rounded-2xl text-xs">重新授权</button>
+                            </div>
+                            <div class="text-xs text-emerald-600 mt-1 flex items-center gap-x-1">
+                                <i class="fa-solid fa-check-circle"></i> 
+                                <span>Token 有效期至 2026-05-24</span>
+                            </div>
+                        </div>
+                        
+                        <div class="pt-4 border-t">
+                            <div class="flex items-center justify-between text-xs">
+                                <div>接口地址</div>
+                                <div class="font-mono text-sky-600">https://open.kuaishou.com</div>
+                            </div>
+                            
+                            <div class="mt-3 text-xs bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 p-4 rounded-2xl text-yellow-700 dark:text-yellow-400">
+                                <strong>注意：</strong> 真实生产环境请使用正式的快手开放平台凭证。<br>
+                                本系统已兼容 <code>/openapi/photo/start_upload</code> 等视频上传接口。
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8 flex gap-x-4">
+                        <button onclick="testAPIConnection(this)" class="flex-1 py-3 border border-slate-300 dark:border-slate-600 rounded-2xl text-sm font-medium">测试连接</button>
+                        <button onclick="this.closest('.fixed').remove()" class="flex-1 py-3 bg-sky-600 text-white rounded-2xl text-sm font-medium">保存配置</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+        
+        function simulateOAuth() {
+            const btns = event.currentTarget;
+            const originalText = btns ? btns.innerHTML : '';
+            
+            const modal = event.target.closest('.fixed');
+            
+            const loading = document.createElement('div');
+            loading.className = 'fixed inset-0 bg-black/60 flex items-center justify-center z-[300]';
+            loading.innerHTML = `
+                <div class="bg-white dark:bg-slate-800 px-10 py-8 rounded-3xl text-center">
+                    <div class="animate-spin w-9 h-9 border-4 border-sky-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+                    <div class="font-medium">正在跳转快手授权页面...</div>
+                    <div class="text-xs text-slate-400 mt-1">请在弹窗中完成授权</div>
+                </div>
+            `;
+            
+            document.body.appendChild(loading);
+            
+            setTimeout(() => {
+                loading.remove();
+                if (modal) modal.remove();
+                
+                const successToast = document.createElement('div');
+                successToast.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 bg-emerald-600 text-white px-8 py-4 rounded-3xl shadow-xl flex items-center gap-x-3 z-[400]';
+                successToast.innerHTML = `<i class="fa-solid fa-check-double text-xl"></i> <div>授权成功！Access Token 已更新</div>`;
+                document.body.appendChild(successToast);
+                
+                setTimeout(() => successToast.remove(), 2800);
+            }, 1850);
+        }
+        
+        function testAPIConnection(btn) {
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> 测试中...`;
+            btn.disabled = true;
+            
+            setTimeout(() => {
+                btn.innerHTML = `<i class="fa-solid fa-check mr-2"></i> 连接成功`;
+                btn.classList.add('!bg-emerald-600', '!border-emerald-600', 'text-white');
+                
+                setTimeout(() => {
+                    btn.closest('.fixed').remove();
+                    
+                    const toast = document.createElement('div');
+                    toast.className = 'fixed bottom-6 right-6 bg-emerald-600 text-white px-6 py-3.5 rounded-3xl flex items-center gap-x-3 shadow-xl z-[300]';
+                    toast.innerHTML = `快手 API 连接正常 (v4.8.3)`;
+                    document.body.appendChild(toast);
+                    setTimeout(() => toast.remove(), 2400);
+                }, 900);
+            }, 1350);
+        }
+        
+        // 初始化函数
+        function initializeApp() {
+            initTailwind();
+            
+            // 加载数据
+            loadFromLocalStorage();
+            if (shops.length === 0) {
+                initDemoData();
+            }
+            
+            // 渲染初始内容
+            updateDashboardStats();
+            renderLibrary();
+            renderShopsTable();
+            renderPromotersTable();
+            renderHistoryTable();
+            
+            // 默认显示仪表盘
+            document.getElementById('section-dashboard').classList.add('active');
+            document.getElementById('nav-dashboard').classList.add('nav-active');
+            
+            // 键盘快捷键
+            document.addEventListener('keydown', function(e) {
+                if (e.metaKey && e.key === 'k') {
+                    e.preventDefault();
+                    navigateTo('batch-upload');
+                }
+                
+                if (e.key === '/' && document.activeElement.tagName === 'BODY') {
+                    e.preventDefault();
+                    const search = document.getElementById('library-search');
+                    if (search) search.focus();
+                }
+            });
+            
+            // 欢迎提示
+            setTimeout(() => {
+                console.log('%c[磁力金牛] 网站已就绪 - 演示模式', 'color:#64748b; font-size:9px');
+            }, 1200);
+            
+            // 随机更新仪表盘数据（演示）
+            setInterval(() => {
+                if (document.getElementById('section-dashboard').classList.contains('active')) {
+                    const todayEl = document.getElementById('today-upload');
+                    if (todayEl) {
+                        let current = parseInt(todayEl.textContent);
+                        current += Math.floor(Math.random() * 3);
+                        todayEl.textContent = current;
+                    }
+                }
+            }, 45000);
+            
+            console.log('%c✅ 磁力金牛快手批量上传系统初始化完成', 'color:#0ea5e9');
+        }
+        
+        // 启动应用
+        window.onload = initializeApp;
+        
+        // 全局暴露一些函数（方便调试）
+        window.KuaiShouApp = {
+            navigateTo,
+            showUploadModal,
+            startBatchUpload: () => navigateTo('batch-upload')
+        };
+    </script>
+</body>
+</html>
