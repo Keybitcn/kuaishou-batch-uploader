@@ -63,14 +63,21 @@
         let list = [];
         snap.forEach(c => list.push({id: c.key, ...c.val()}));
 
-        document.getElementById('latestList').innerHTML = list.sort((a,b) => b.time - a.time).map(v => createCard(v)).join('');
-        document.getElementById('topList').innerHTML = list.sort((a,b) => (b.likes||0) - (a.likes||0)).slice(0,10).map(v => createCard(v)).join('');
+        // 左侧：全部最新（按时间倒序）
+        document.getElementById('latestList').innerHTML = list
+          .sort((a,b) => b.time - a.time)
+          .map(v => createCard(v)).join('');
+
+        // 右侧：共鸣排行
+        document.getElementById('topList').innerHTML = list
+          .sort((a,b) => (b.likes||0) - (a.likes||0))
+          .slice(0,10)
+          .map(v => createCard(v)).join('');
       });
     }
 
     window.toggleComments = function(id) {
       const container = document.getElementById(`comments-${id}`);
-      if (!container) return;
       if (container.classList.contains('hidden')) {
         container.classList.remove('hidden');
         container.innerHTML = `<div id="comment-list-${id}" class="space-y-3 mb-4"></div><div class="flex gap-2"><input id="reply-${id}" class="flex-1 bg-white/10 border border-white/20 rounded-2xl px-4 py-2 text-sm" placeholder="回复..."><button onclick="postComment('${id}')" class="bg-purple-500 px-5 rounded-2xl text-sm">回复</button></div>`;
