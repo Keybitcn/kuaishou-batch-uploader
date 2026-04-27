@@ -45,27 +45,36 @@
     const db = firebase.database().ref('longWishes');
 
     function createCard(v, showTime) {
-      return `<div class="glass rounded-3xl p-7">
+      const div = document.createElement('div');
+      div.className = 'glass rounded-3xl p-7';
+      div.innerHTML = `
         <p class="text-lg">${v.text}</p>
         <div class="mt-6 flex justify-between text-sm">
           <span class="text-pink-400">❤️ ${v.likes || 0}</span>
           ${showTime ? `<span class="text-gray-400">${new Date(v.time).toLocaleString('zh-CN')}</span>` : ''}
         </div>
-      </div>`;
+      `;
+      return div;
     }
 
     function loadData() {
       db.on('value', snap => {
+        console.log('收到数据，总条数:', snap.numChildren());
         let list = [];
         snap.forEach(c => list.push({id: c.key, ...c.val()}));
 
-        // 最新心愿（全部，按时间倒序）
+        // 最新心愿（全部）
+        const latestContainer = document.getElementById('latestList');
+        latestContainer.innerHTML = '';
         const latest = [...list].sort((a,b) => b.time - a.time);
-        document.getElementById('latestList').innerHTML = latest.map(v => createCard(v, true)).join('') || '<p class="text-center py-20 text-gray-400">还没有心愿～</p>';
+        console.log('最新心愿渲染条数:', latest.length);
+        latest.forEach(v => latestContainer.appendChild(createCard(v, true)));
 
-        // 共鸣排行（前10）
+        // 共鸣排行
+        const topContainer = document.getElementById('topList');
+        topContainer.innerHTML = '';
         const top = [...list].sort((a,b) => (b.likes||0) - (a.likes||0)).slice(0,10);
-        document.getElementById('topList').innerHTML = top.map(v => createCard(v, false)).join('');
+        top.forEach(v => topContainer.appendChild(createCard(v, false)));
       });
     }
 
