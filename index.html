@@ -52,38 +52,35 @@
 
     function createCard(v) {
       const commentCount = v.comments ? Object.keys(v.comments).length : 0;
-      const div = document.createElement('div');
-      div.className = 'glass rounded-3xl p-7';
       let html = `
-        <p class="text-lg">${v.text}</p>
-        <div class="mt-6 flex justify-between text-sm">
-          <span class="text-pink-400">❤️ ${v.likes || 0}</span>
-          <button onclick="toggleComments('${v.id}')" class="text-purple-400">💬 ${commentCount}</button>
-          <span class="text-gray-400">${new Date(v.time).toLocaleString('zh-CN')}</span>
-        </div>
-        <div id="comments-${v.id}" class="hidden mt-6 border-t border-white/10 pt-4"></div>`;
+        <div class="glass rounded-3xl p-7">
+          <p class="text-lg">${v.text}</p>
+          <div class="mt-6 flex justify-between text-sm">
+            <span class="text-pink-400">❤️ ${v.likes || 0}</span>
+            <button onclick="toggleComments('${v.id}')" class="text-purple-400">💬 ${commentCount}</button>
+            <span class="text-gray-400">${new Date(v.time).toLocaleString('zh-CN')}</span>
+          </div>
+          <div id="comments-${v.id}" class="hidden mt-6 border-t border-white/10 pt-4"></div>`;
       if (isAdmin) html += `<button onclick="deleteWish('${v.id}')" class="mt-3 text-red-400 text-sm">删除</button>`;
       html += `</div>`;
-      div.innerHTML = html;
-      return div;
+      return html;
     }
 
     function loadData() {
       db.on('value', snap => {
-        const latestContainer = document.getElementById('latestList');
-        latestContainer.innerHTML = '';
         let list = [];
         snap.forEach(c => list.push({id: c.key, ...c.val()}));
 
-        list.sort((a,b) => b.time - a.time).forEach(v => {
-          latestContainer.appendChild(createCard(v));
-        });
+        // 左侧最新（全部）
+        document.getElementById('latestList').innerHTML = list
+          .sort((a,b) => b.time - a.time)
+          .map(v => createCard(v)).join('');
 
-        const topContainer = document.getElementById('topList');
-        topContainer.innerHTML = '';
-        list.sort((a,b) => (b.likes||0) - (a.likes||0)).slice(0,10).forEach(v => {
-          topContainer.appendChild(createCard(v));
-        });
+        // 右侧排行
+        document.getElementById('topList').innerHTML = list
+          .sort((a,b) => (b.likes||0) - (a.likes||0))
+          .slice(0,10)
+          .map(v => createCard(v)).join('');
       });
     }
 
