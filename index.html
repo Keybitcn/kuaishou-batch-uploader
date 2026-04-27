@@ -8,56 +8,89 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
   <style>
-    body { background: linear-gradient(135deg, #0f172a, #1e1b4b); }
-    .card { background: rgba(255,255,255,0.08); backdrop-filter: blur(20px); border: 1px solid rgba(168,85,247,0.3); }
+    body { background: linear-gradient(135deg, #0f172a, #1e2937); }
   </style>
 </head>
 <body class="min-h-screen text-white p-6 pb-32">
   <div class="max-w-2xl mx-auto">
-    <h1 class="text-6xl font-bold text-center mb-12">🌟 长久许愿墙 🌟</h1>
-    <div id="wishList" class="space-y-8"></div>
+    <h1 class="text-5xl font-bold text-center mb-8">🌟 长久许愿墙 🌟</h1>
+    <div id="wishList" class="space-y-6"></div>
   </div>
 
-  <div class="fixed bottom-0 left-0 right-0 bg-slate-950/90 p-6 border-t border-purple-500">
+  <div class="fixed bottom-0 left-0 right-0 bg-slate-950/95 p-6 border-t border-purple-500">
     <div class="max-w-2xl mx-auto">
-      <textarea id="message" rows="3" class="w-full bg-white/5 border border-purple-400 rounded-3xl p-6" placeholder="写下你的长久心愿..."></textarea>
-      <button onclick="postWish()" class="mt-4 w-full bg-purple-600 py-6 rounded-3xl font-bold">✨ 许愿</button>
+      <textarea id="message" rows="3" class="w-full bg-slate-900 border border-purple-500 rounded-3xl p-6" placeholder="写下你的长久心愿..."></textarea>
+      <button onclick="postWish()" class="mt-4 w-full bg-purple-600 py-5 rounded-3xl font-bold text-xl">许愿</button>
     </div>
   </div>
 
+  <button onclick="adminLogin()" class="fixed bottom-6 right-6 bg-white/10 px-6 py-3 rounded-full">👑</button>
+
   <script>
-    firebase.initializeApp({ databaseURL: "https://changjiu-9280f-default-rtdb.asia-southeast1.firebasedatabase.app" });
+    const firebaseConfig = {
+      databaseURL: "https://changjiu-9280f-default-rtdb.asia-southeast1.firebasedatabase.app"
+    };
+
+    firebase.initializeApp(firebaseConfig);
     const db = firebase.database().ref('longWishes');
 
+    let isAdmin = false;
+    let myPosts = JSON.parse(localStorage.getItem('myPosts') || '[]');
+
     function loadWishes() {
-      db.orderByChild('likes').on('value', snap => {
-        let html = '';
-        const arr = [];
-        snap.forEach(c => arr.push({id:c.key, ...c.val()}));
-        arr.sort((a,b) => (b.likes||0) - (a.likes||0));
-        arr.forEach(w => {
-          html += `<div class="card p-8 rounded-3xl mb-6">
-            <p class="text-[${18 + Math.min((w.likes||0)*2,32)}px]">${w.text}</p>
-            <div class="mt-4 flex justify-between text-sm">
-              <button onclick="likeWish('${w.id}')" class="text-pink-400">❤️ ${w.likes||0}</button>
-              <span>${new Date(w.time).toLocaleDateString('zh-CN')}</span>
-            </div>
-          </div>`;
+      console.log("开始监听数据...");
+      db.orderByChild('likes').on('value', (snap) => {
+        console.log("收到数据更新，条数:", snap.numChildren());
+        const wishes = [];
+        snap.forEach(child => {
+          wishes.push({id: child.key, ...child.val()});
         });
-        document.getElementById('wishList').innerHTML = html || '<p class="text-center py-20 text-gray-400">还没有心愿</p>';
+        wishes.sort((a,b) => (b.likes||0) - (a.likes||0));
+
+        let html = '';
+        wishes.forEach(w => {
+          html += `
+            <div class="bg-white/10 p-8 rounded-3xl mb-6">
+              <p class="text-[${18 + Math.min((w.likes||0)*2, 32)}px] leading-relaxed">${w.text}</p>
+              <div class="mt-4 flex justify-between text-sm">
+                <button onclick="likeWish('${w.id}')" class="text-pink-400">❤️ ${w.likes||0}</button>
+                <span>${new Date(w.time).toLocaleDateString('zh-CN')}</span>
+                ${(myPosts.includes(w.id) || isAdmin) ? `<button onclick="deleteWish('${w.id}')" class="text-red-400">删除</button>` : ''}
+              </div>
+            </div>`;
+        });
+        document.getElementById('wishList').innerHTML = html || '<p class="text-center text-gray-400 py-10">还没有心愿，快来许愿吧~</p>';
       });
     }
 
     function postWish() {
-      const t = document.getElementById('message').value.trim();
-      if(t) db.push({text:t, time:Date.now(), likes:0});
-      document.getElementById('message').value = '';
+      const text = document.getElementById('message').value.trim();
+      if (!text) return alert("请输入心愿");
+      db.push({ text, time: Date.now(), likes: 0 }).then(() => {
+        document.getElementById('message').value = '';
+      });
     }
 
     function likeWish(id) {
-      db.child(id).child('likes').transaction(v => (v||0)+1);
+      db.child(id).child('likes').transaction(v => (v || 0) + 1);
     }
 
+    function deleteWish(id) {
+      if (confirm('确定删除？')) {
+        db.child(id).remove();
+        myPosts = myPosts.filter(p => p !== id);
+        localStorage.setItem('myPosts', JSON.stringify(myPosts));
+      }
+    }
+
+    function adminLogin() {
+      if (prompt("输入管理员密码") === "admin123") {
+        isAdmin = true;
+        alert("管理员模式已开启");
+      }
+    }
+
+    // 启动
     loadWishes();
   </script>
 </body>
