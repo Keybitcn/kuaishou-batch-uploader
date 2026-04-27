@@ -9,12 +9,12 @@
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
   <style>
     body { background: linear-gradient(135deg, #0a0a1f, #1f1233); }
-    .glass { background: rgba(255,255,255,0.09); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.15); }
+    .glass { background: rgba(255,255,255,0.1); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.2); }
   </style>
 </head>
-<body class="min-h-screen text-white p-6">
+<body class="min-h-screen text-white p-6 pb-32">
   <div class="max-w-7xl mx-auto">
-    <h1 class="text-5xl font-bold text-center mb-2 bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">长久星球</h1>
+    <h1 class="text-5xl font-bold text-center mb-2">长久星球</h1>
     <p class="text-center text-purple-300 mb-10">🌟 把心愿留在这里，长久陪伴</p>
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -43,33 +43,17 @@
   <script>
     firebase.initializeApp({ databaseURL: "https://changjiu-9280f-default-rtdb.asia-southeast1.firebasedatabase.app" });
     const db = firebase.database().ref('longWishes');
-    let likedPosts = JSON.parse(localStorage.getItem('likedPosts') || '[]');
+    let liked = JSON.parse(localStorage.getItem('liked') || '[]');
 
-    function createCard(v, showTime) {
-      const alreadyLiked = likedPosts.includes(v.id);
-      return `
-        <div class="glass rounded-3xl p-7">
-          <p class="text-lg leading-relaxed">${v.text}</p>
-          <div class="mt-6 flex justify-between items-center text-sm">
-            <button onclick="like('${v.id}')" class="${alreadyLiked ? 'text-pink-300 cursor-default' : 'text-pink-400 hover:text-pink-300'}">
-              ❤️ <span class="font-semibold">${v.likes || 0}</span>
-            </button>
-            ${showTime ? `<span class="text-gray-400">${new Date(v.time).toLocaleString('zh-CN')}</span>` : ''}
-          </div>
-        </div>`;
-    }
-
-    function loadData() {
+    function load() {
       db.on('value', snap => {
         let list = [];
         snap.forEach(c => list.push({id: c.key, ...c.val()}));
 
-        // 左侧最新
         document.getElementById('latestList').innerHTML = list
           .sort((a,b) => b.time - a.time)
-          .map(v => createCard(v, true)).join('') || '<p class="text-center py-20 text-gray-400">还没有心愿～</p>';
+          .map(v => createCard(v, true)).join('');
 
-        // 右侧排行
         document.getElementById('topList').innerHTML = list
           .sort((a,b) => (b.likes||0) - (a.likes||0))
           .slice(0,10)
@@ -77,21 +61,33 @@
       });
     }
 
+    function createCard(v, showTime) {
+      const likedAlready = liked.includes(v.id);
+      return `<div class="glass rounded-3xl p-7">
+        <p class="text-lg">${v.text}</p>
+        <div class="mt-6 flex justify-between text-sm">
+          <button onclick="like('${v.id}')" class="${likedAlready ? 'text-pink-300' : 'text-pink-400 hover:text-pink-300'}">❤️ ${v.likes||0}</button>
+          ${showTime ? `<span class="text-gray-400">${new Date(v.time).toLocaleString('zh-CN')}</span>` : ''}
+        </div>
+      </div>`;
+    }
+
     function postMessage() {
-      const text = document.getElementById('message').value.trim();
-      if (!text) return alert("请输入心愿");
-      db.push({ text, time: Date.now(), likes: 0 });
-      document.getElementById('message').value = '';
+      const t = document.getElementById('message').value.trim();
+      if(t) {
+        db.push({text: t, time: Date.now(), likes: 0});
+        document.getElementById('message').value = '';
+      }
     }
 
     function like(id) {
-      if (likedPosts.includes(id)) return;
-      likedPosts.push(id);
-      localStorage.setItem('likedPosts', JSON.stringify(likedPosts));
-      db.child(id).child('likes').transaction(v => (v || 0) + 1);
+      if(liked.includes(id)) return;
+      liked.push(id);
+      localStorage.setItem('liked', JSON.stringify(liked));
+      db.child(id).child('likes').transaction(v => (v||0)+1);
     }
 
-    loadData();
+    load();
   </script>
 </body>
 </html>
