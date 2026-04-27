@@ -19,7 +19,7 @@
         <h1 class="text-5xl font-bold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">长久星球</h1>
         <p class="text-purple-300">🌟 把心愿留在这里，长久陪伴</p>
       </div>
-      <button onclick="adminLogin()" class="glass px-6 py-2 rounded-2xl text-sm">👑 管理员登录</button>
+      <button onclick="adminLogin()" class="glass px-6 py-2 rounded-2xl text-sm">👑 管理员</button>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
@@ -51,17 +51,18 @@
     let isAdmin = false;
 
     function createCard(v) {
+      const commentCount = v.comments ? Object.keys(v.comments).length : 0;
       const div = document.createElement('div');
       div.className = 'glass rounded-3xl p-7';
       let html = `
         <p class="text-lg">${v.text}</p>
         <div class="mt-6 flex justify-between text-sm">
           <span class="text-pink-400">❤️ ${v.likes || 0}</span>
+          <button onclick="toggleComments('${v.id}')" class="text-purple-400">💬 ${commentCount}</button>
           <span class="text-gray-400">${new Date(v.time).toLocaleString('zh-CN')}</span>
-        </div>`;
-      if (isAdmin) {
-        html += `<button onclick="deleteWish('${v.id}')" class="mt-3 text-red-400 text-sm">删除</button>`;
-      }
+        </div>
+        <div id="comments-${v.id}" class="hidden mt-6 border-t border-white/10 pt-4"></div>`;
+      if (isAdmin) html += `<button onclick="deleteWish('${v.id}')" class="mt-3 text-red-400 text-sm">删除</button>`;
       html += `</div>`;
       div.innerHTML = html;
       return div;
@@ -69,22 +70,51 @@
 
     function loadData() {
       db.on('value', snap => {
-        console.log('收到数据，总条数:', snap.numChildren());
         const latestContainer = document.getElementById('latestList');
         latestContainer.innerHTML = '';
-        let count = 0;
-        snap.forEach(c => {
-          const v = {id: c.key, ...c.val()};
-          latestContainer.appendChild(createCard(v));
-          count++;
-        });
-        console.log('左侧渲染条数:', count);
+        let list = [];
+        snap.forEach(c => list.push({id: c.key, ...c.val()}));
 
-        // 右侧排行（简单复制最新，实际可优化）
+        list.sort((a,b) => b.time - a.time).forEach(v => {
+          latestContainer.appendChild(createCard(v));
+        });
+
         const topContainer = document.getElementById('topList');
-        topContainer.innerHTML = latestContainer.innerHTML;
+        topContainer.innerHTML = '';
+        list.sort((a,b) => (b.likes||0) - (a.likes||0)).slice(0,10).forEach(v => {
+          topContainer.appendChild(createCard(v));
+        });
       });
     }
+
+    window.toggleComments = function(id) {
+      const container = document.getElementById(`comments-${id}`);
+      if (container.classList.contains('hidden')) {
+        container.classList.remove('hidden');
+        container.innerHTML = `<div id="comment-list-${id}" class="space-y-3 mb-4"></div><div class="flex gap-2"><input id="reply-${id}" class="flex-1 bg-white/10 border border-white/20 rounded-2xl px-4 py-2 text-sm" placeholder="回复..."><button onclick="postComment('${id}')" class="bg-purple-500 px-5 rounded-2xl text-sm">回复</button></div>`;
+        loadComments(id);
+      } else {
+        container.classList.add('hidden');
+      }
+    };
+
+    function loadComments(id) {
+      firebase.database().ref(`longWishes/${id}/comments`).on('value', snap => {
+        const el = document.getElementById(`comment-list-${id}`);
+        if (!el) return;
+        let html = '';
+        snap.forEach(c => html += `<div class="bg-white/5 p-3 rounded-2xl text-sm">${c.val().text}</div>`);
+        el.innerHTML = html || '<p class="text-gray-400 text-xs text-center py-2">还没有回复</p>';
+      });
+    }
+
+    window.postComment = function(id) {
+      const input = document.getElementById(`reply-${id}`);
+      const text = input.value.trim();
+      if (!text) return;
+      firebase.database().ref(`longWishes/${id}/comments`).push({text, time: Date.now()});
+      input.value = '';
+    };
 
     function postMessage() {
       const text = document.getElementById('message').value.trim();
@@ -94,19 +124,17 @@
     }
 
     window.deleteWish = function(id) {
-      if (!isAdmin || !confirm('确定删除这条心愿？')) return;
+      if (!isAdmin || !confirm('确定删除？')) return;
       db.child(id).remove();
     };
 
     function adminLogin() {
-      const pass = prompt('请输入管理员密码');
+      const pass = prompt('管理员密码');
       if (pass === 'admin123') {
         isAdmin = true;
-        alert('管理员登录成功，可以删除任何心愿');
-        loadData(); // 重新加载显示删除按钮
-      } else {
-        alert('密码错误');
-      }
+        alert('管理员登录成功');
+        loadData();
+      } else alert('密码错误');
     }
 
     loadData();
