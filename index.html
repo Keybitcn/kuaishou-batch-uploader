@@ -7,53 +7,97 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+  <style>
+    body { background: linear-gradient(135deg, #0a0a1f, #1f1233); }
+    .glass { background: rgba(255,255,255,0.09); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.15); }
+  </style>
 </head>
-<body class="bg-[#0a0a1f] text-white p-6 min-h-screen">
-  <h1 class="text-5xl font-bold text-center mb-8">长久星球</h1>
-  <p class="text-center text-purple-300 mb-10">🌟 把心愿留在这里，长久陪伴</p>
+<body class="min-h-screen text-white p-6">
+  <div class="max-w-7xl mx-auto">
+    <h1 class="text-5xl font-bold text-center mb-2 bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">长久星球</h1>
+    <p class="text-center text-purple-300 mb-10">🌟 把心愿留在这里，长久陪伴</p>
 
-  <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
-    <div class="lg:col-span-9">
-      <div class="bg-white/10 backdrop-blur-xl rounded-3xl p-8">
-        <h2 class="text-2xl mb-6">最新心愿</h2>
-        <div id="latest" class="space-y-6"></div>
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div class="lg:col-span-9">
+        <div class="glass rounded-3xl p-6">
+          <h2 class="text-2xl font-semibold mb-6">最新心愿</h2>
+          <div id="latestList" class="space-y-6"></div>
+        </div>
       </div>
-    </div>
-    <div class="lg:col-span-3">
-      <div class="bg-white/10 backdrop-blur-xl rounded-3xl p-8 sticky top-6">
-        <h2 class="text-2xl mb-6">🔥 共鸣排行</h2>
-        <div id="top" class="space-y-6"></div>
+      <div class="lg:col-span-3">
+        <div class="glass rounded-3xl p-6 sticky top-6">
+          <h2 class="text-2xl font-semibold mb-6">🔥 共鸣排行</h2>
+          <div id="topList" class="space-y-6"></div>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="fixed bottom-4 left-4 right-4 max-w-4xl mx-auto bg-white/10 backdrop-blur-xl rounded-3xl p-6">
-    <textarea id="msg" rows="3" class="w-full bg-transparent text-lg placeholder-gray-400" placeholder="写下你的长久心愿..."></textarea>
-    <button onclick="send()" class="mt-4 w-full bg-gradient-to-r from-purple-500 to-pink-500 py-4 rounded-2xl font-bold">许下心愿</button>
+  <div class="fixed bottom-0 left-0 right-0 bg-black/90 border-t border-white/10 p-6">
+    <div class="max-w-4xl mx-auto glass rounded-3xl p-6">
+      <textarea id="message" rows="3" class="w-full bg-transparent text-lg placeholder-gray-400 focus:outline-none" placeholder="写下你的长久心愿..."></textarea>
+      <button onclick="postMessage()" class="mt-4 w-full bg-gradient-to-r from-purple-500 to-pink-500 py-4 rounded-2xl font-bold">许下心愿</button>
+    </div>
   </div>
 
   <script>
-    firebase.initializeApp({ databaseURL: "https://changjiu-9280f-default-rtdb.asia-southeast1.firebasedatabase.app" });
+    firebase.initializeApp({ 
+      databaseURL: "https://changjiu-9280f-default-rtdb.asia-southeast1.firebasedatabase.app" 
+    });
     const db = firebase.database().ref('longWishes');
 
-    db.on('value', snap => {
-      let list = [];
-      snap.forEach(c => list.push({id: c.key, ...c.val()}));
+    function loadData() {
+      db.on('value', (snap) => {
+        const latestEl = document.getElementById('latestList');
+        const topEl = document.getElementById('topList');
+        
+        latestEl.innerHTML = '';
+        topEl.innerHTML = '';
 
-      document.getElementById('latest').innerHTML = list
-        .sort((a,b) => b.time - a.time)
-        .map(item => `<div class="bg-white/10 p-6 rounded-2xl"><p>${item.text}</p><div class="text-pink-400 mt-3">❤️ ${item.likes || 0}</div></div>`).join('');
+        let list = [];
+        snap.forEach(child => {
+          list.push({ id: child.key, ...child.val() });
+        });
 
-      document.getElementById('top').innerHTML = list
-        .sort((a,b) => (b.likes||0) - (a.likes||0))
-        .slice(0,10)
-        .map(item => `<div class="bg-white/10 p-6 rounded-2xl"><p>${item.text}</p><div class="text-pink-400 mt-3">❤️ ${item.likes || 0}</div></div>`).join('');
-    });
+        console.log('总共加载到', list.length, '条数据');
 
-    function send() {
-      const t = document.getElementById('msg').value.trim();
-      if(t) db.push({text:t, time:Date.now(), likes:0}), document.getElementById('msg').value = '';
+        // 最新（按时间倒序）
+        list.sort((a, b) => b.time - a.time).forEach(item => {
+          const div = document.createElement('div');
+          div.className = 'glass rounded-3xl p-7';
+          div.innerHTML = `
+            <p class="text-lg">${item.text}</p>
+            <div class="mt-4 flex justify-between text-sm">
+              <span class="text-pink-400">❤️ ${item.likes || 0}</span>
+              <span class="text-gray-400">${new Date(item.time).toLocaleString('zh-CN')}</span>
+            </div>
+          `;
+          latestEl.appendChild(div);
+        });
+
+        // 共鸣排行（按点赞降序）
+        list.sort((a, b) => (b.likes || 0) - (a.likes || 0)).slice(0, 10).forEach(item => {
+          const div = document.createElement('div');
+          div.className = 'glass rounded-3xl p-7';
+          div.innerHTML = `
+            <p class="text-lg">${item.text}</p>
+            <div class="mt-4 flex justify-between text-sm">
+              <span class="text-pink-400">❤️ ${item.likes || 0}</span>
+            </div>
+          `;
+          topEl.appendChild(div);
+        });
+      });
     }
+
+    function postMessage() {
+      const text = document.getElementById('message').value.trim();
+      if (!text) return alert("请输入内容");
+      firebase.database().ref('longWishes').push({ text, time: Date.now(), likes: 0 });
+      document.getElementById('message').value = '';
+    }
+
+    loadData();
   </script>
 </body>
 </html>
