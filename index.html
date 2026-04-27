@@ -44,14 +44,14 @@
     firebase.initializeApp({ databaseURL: "https://changjiu-9280f-default-rtdb.asia-southeast1.firebasedatabase.app" });
     const db = firebase.database().ref('longWishes');
 
-    function createCard(v) {
+    function createCard(v, showTime) {
       const div = document.createElement('div');
       div.className = 'glass rounded-3xl p-7';
       div.innerHTML = `
         <p class="text-lg">${v.text}</p>
         <div class="mt-6 flex justify-between text-sm">
           <span class="text-pink-400">❤️ ${v.likes || 0}</span>
-          <span class="text-gray-400">${new Date(v.time).toLocaleString('zh-CN')}</span>
+          ${showTime ? `<span class="text-gray-400">${new Date(v.time).toLocaleString('zh-CN')}</span>` : ''}
         </div>
       `;
       return div;
@@ -60,15 +60,24 @@
     function loadData() {
       db.on('value', snap => {
         console.log('收到数据，总条数:', snap.numChildren());
+        let list = [];
+        snap.forEach(c => list.push({id: c.key, ...c.val()}));
+
+        // 左侧最新（全部）
         const latestContainer = document.getElementById('latestList');
         latestContainer.innerHTML = '';
-        let count = 0;
-        snap.forEach(c => {
-          const v = {id: c.key, ...c.val()};
-          latestContainer.appendChild(createCard(v));
-          count++;
+        list.slice().sort((a,b) => b.time - a.time).forEach(v => {
+          latestContainer.appendChild(createCard(v, true));
         });
-        console.log('实际渲染条数:', count);
+        console.log('左侧渲染条数:', latestContainer.children.length);
+
+        // 右侧排行
+        const topContainer = document.getElementById('topList');
+        topContainer.innerHTML = '';
+        list.slice().sort((a,b) => (b.likes||0) - (a.likes||0)).slice(0,10).forEach(v => {
+          topContainer.appendChild(createCard(v, false));
+        });
+        console.log('右侧渲染条数:', topContainer.children.length);
       });
     }
 
