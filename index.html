@@ -62,22 +62,16 @@
         console.log('收到数据，总条数:', snap.numChildren());
         const latestContainer = document.getElementById('latestList');
         latestContainer.innerHTML = '';
-        let list = [];
-        snap.forEach(c => list.push({id: c.key, ...c.val()}));
-
-        // 最新心愿（全部，按时间倒序）
-        list.sort((a,b) => b.time - a.time).forEach(v => {
+        let count = 0;
+        snap.forEach(c => {
+          const v = {id: c.key, ...c.val()};
           latestContainer.appendChild(createCard(v));
+          count++;
         });
-        console.log('左侧渲染条数:', latestContainer.children.length);
+        console.log('左侧渲染条数:', count);
 
-        // 共鸣排行
         const topContainer = document.getElementById('topList');
-        topContainer.innerHTML = '';
-        list.sort((a,b) => (b.likes||0) - (a.likes||0)).slice(0,10).forEach(v => {
-          topContainer.appendChild(createCard(v));
-        });
-        console.log('右侧渲染条数:', topContainer.children.length);
+        topContainer.innerHTML = latestContainer.innerHTML;
       });
     }
 
