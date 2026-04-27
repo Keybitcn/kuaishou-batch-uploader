@@ -7,77 +7,33 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-  <style>
-    body { background: linear-gradient(135deg, #0a0a1f, #1f1233); }
-    .glass { background: rgba(255,255,255,0.09); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.18); }
-  </style>
 </head>
-<body class="min-h-screen text-white p-6 pb-40">
-  <div class="max-w-7xl mx-auto">
-    <h1 class="text-5xl font-bold text-center mb-2 bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">长久星球</h1>
-    <p class="text-center text-purple-300 mb-10">🌟 把心愿留在这里，长久陪伴</p>
+<body class="bg-[#0a0a1f] text-white p-6">
+  <h1 class="text-4xl font-bold text-center mb-8">长久星球</h1>
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-      <div class="lg:col-span-9">
-        <div class="glass rounded-3xl p-6">
-          <h2 class="text-2xl mb-6">最新心愿</h2>
-          <div id="latestList" class="space-y-6"></div>
-        </div>
-      </div>
-      <div class="lg:col-span-3">
-        <div class="glass rounded-3xl p-6 sticky top-6">
-          <h2 class="text-2xl mb-6">🔥 共鸣排行</h2>
-          <div id="topList" class="space-y-6"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="fixed bottom-0 left-0 right-0 bg-black/90 p-6">
-    <div class="max-w-4xl mx-auto glass rounded-3xl p-6">
-      <textarea id="message" rows="3" class="w-full bg-transparent text-lg placeholder-gray-400 focus:outline-none" placeholder="写下你的长久心愿..."></textarea>
-      <button onclick="postMessage()" class="mt-4 w-full bg-gradient-to-r from-purple-500 to-pink-500 py-4 rounded-2xl font-bold">许下心愿</button>
-    </div>
+  <div class="max-w-2xl mx-auto glass bg-white/10 backdrop-blur-2xl rounded-3xl p-6">
+    <h2 class="text-xl mb-4">全部心愿（调试版）</h2>
+    <div id="list" class="space-y-4"></div>
   </div>
 
   <script>
     firebase.initializeApp({ databaseURL: "https://changjiu-9280f-default-rtdb.asia-southeast1.firebasedatabase.app" });
     const db = firebase.database().ref('longWishes');
 
-    function loadData() {
-      db.on('value', snap => {
-        let list = [];
-        snap.forEach(c => list.push({id: c.key, ...c.val()}));
+    console.log("🚀 开始监听 longWishes...");
 
-        // 最新心愿（全部，按时间倒序）
-        const latestHTML = list.sort((a,b) => b.time - a.time).map(v => `
-          <div class="glass rounded-3xl p-7">
-            <p class="text-lg">${v.text}</p>
-            <div class="mt-6 flex justify-between text-sm">
-              <span class="text-pink-400">❤️ ${v.likes || 0}</span>
-              <span class="text-gray-400">${new Date(v.time).toLocaleString('zh-CN')}</span>
-            </div>
-          </div>`).join('');
-        document.getElementById('latestList').innerHTML = latestHTML || '<p class="text-center py-20 text-gray-400">还没有心愿～</p>';
-
-        // 共鸣排行
-        const topHTML = list.sort((a,b) => (b.likes||0) - (a.likes||0)).slice(0,10).map(v => `
-          <div class="glass rounded-3xl p-7">
-            <p class="text-lg">${v.text}</p>
-            <div class="mt-4 text-pink-400">❤️ ${v.likes || 0}</div>
-          </div>`).join('');
-        document.getElementById('topList').innerHTML = topHTML;
+    db.on('value', (snap) => {
+      console.log("📡 收到数据！总条数 =", snap.numChildren());
+      let html = '';
+      snap.forEach(child => {
+        const v = child.val();
+        html += `<div class="bg-white/10 p-5 rounded-2xl">
+          <p>${v.text}</p>
+          <div class="text-xs text-gray-400 mt-2">❤️ ${v.likes||0} · ${new Date(v.time).toLocaleString('zh-CN')}</div>
+        </div>`;
       });
-    }
-
-    function postMessage() {
-      const text = document.getElementById('message').value.trim();
-      if (!text) return;
-      db.push({ text, time: Date.now(), likes: 0 });
-      document.getElementById('message').value = '';
-    }
-
-    loadData();
+      document.getElementById('list').innerHTML = html || '<p class="text-center py-12 text-gray-400">没有数据</p>';
+    });
   </script>
 </body>
 </html>
