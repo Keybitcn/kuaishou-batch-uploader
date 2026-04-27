@@ -66,14 +66,14 @@
         // 最新心愿（全部）
         const latestContainer = document.getElementById('latestList');
         latestContainer.innerHTML = '';
-        const latest = [...list].sort((a,b) => b.time - a.time);
+        const latest = list.slice().sort((a,b) => b.time - a.time);
         console.log('最新心愿渲染条数:', latest.length);
         latest.forEach(v => latestContainer.appendChild(createCard(v, true)));
 
         // 共鸣排行
         const topContainer = document.getElementById('topList');
         topContainer.innerHTML = '';
-        const top = [...list].sort((a,b) => (b.likes||0) - (a.likes||0)).slice(0,10);
+        const top = list.slice().sort((a,b) => (b.likes||0) - (a.likes||0)).slice(0,10);
         top.forEach(v => topContainer.appendChild(createCard(v, false)));
       });
     }
