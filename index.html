@@ -6,93 +6,98 @@
   <title>长久许愿墙</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
   <style>
     body { background: linear-gradient(135deg, #0f172a, #1e2937); }
-    .card { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-    .card:hover { transform: scale(1.03); box-shadow: 0 0 30px rgba(168, 85, 247, 0.6); }
-    .neon { text-shadow: 0 0 20px #a855f7, 0 0 40px #c026d3; }
+    .card { transition: all 0.3s; }
+    .card:hover { transform: scale(1.02); }
   </style>
 </head>
 <body class="min-h-screen text-white p-6 pb-32">
   <div class="max-w-2xl mx-auto">
-    <h1 class="text-5xl font-bold text-center mb-10 neon">🌟 长久许愿墙 🌟</h1>
-    <p class="text-center text-purple-300 mb-8">许下的愿，永远留存</p>
+    <h1 class="text-5xl font-bold text-center mb-8">🌟 长久许愿墙 🌟</h1>
+    <div id="wishList" class="space-y-6"></div>
+  </div>
 
-    <!-- 许愿列表 -->
-    <div id="wishList" class="space-y-6 mb-12"></div>
-
-    <!-- 发布区 -->
-    <div class="fixed bottom-0 left-0 right-0 bg-slate-950/95 backdrop-blur-2xl border-t border-purple-500 p-6">
-      <div class="max-w-2xl mx-auto">
-        <textarea id="message" rows="3" class="w-full bg-slate-900 border border-purple-500 rounded-3xl p-6 text-lg placeholder-gray-400 focus:outline-none" placeholder="写下你的长久心愿..."></textarea>
-        <button onclick="postWish()" class="mt-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 w-full py-5 rounded-3xl font-bold text-xl flex items-center justify-center gap-3">
-          <i class="fas fa-star"></i> 许愿
-        </button>
-      </div>
+  <!-- 发布区 -->
+  <div class="fixed bottom-0 left-0 right-0 bg-slate-950/95 p-6 border-t border-purple-500">
+    <div class="max-w-2xl mx-auto">
+      <textarea id="message" rows="3" class="w-full bg-slate-900 border border-purple-500 rounded-3xl p-6 text-lg placeholder-gray-400" placeholder="写下你的长久心愿..."></textarea>
+      <button onclick="postWish()" class="mt-4 w-full bg-gradient-to-r from-purple-600 to-pink-600 py-5 rounded-3xl font-bold text-xl">许愿</button>
     </div>
   </div>
 
+  <button onclick="adminLogin()" class="fixed bottom-6 right-6 bg-white/10 px-6 py-3 rounded-full text-sm">👑 管理员</button>
+
   <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDUMMY-PLACEHOLDER-KEY",   // ← 改成你的真实 apiKey
+      authDomain: "changjiu-9280f.firebaseapp.com",
+      databaseURL: "https://changjiu-9280f-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "changjiu-9280f",
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database().ref('longWishes');
+
     let isAdmin = false;
-    const ADMIN_USER = "admin";
-    const ADMIN_PASS = "admin123";
+    const ADMIN = {u:"admin", p:"admin123"};
+    let myPosts = JSON.parse(localStorage.getItem('myPosts') || '[]'); // 记录自己发的
 
     function loadWishes() {
-      let wishes = JSON.parse(localStorage.getItem('longWishes') || '[]');
-      wishes.sort((a, b) => (b.likes || 0) - (a.likes || 0));
+      db.orderByChild('likes').on('value', snap => {
+        const wishes = [];
+        snap.forEach(child => wishes.push({id: child.key, ...child.val()}));
+        wishes.sort((a,b) => (b.likes||0) - (a.likes||0));
 
-      document.getElementById('wishList').innerHTML = wishes.map((w, i) => `
-        <div class="card bg-white/10 backdrop-blur-xl border border-purple-500/30 rounded-3xl p-8">
-          <p class="text-[${18 + Math.min((w.likes||0)*2, 32)}px] leading-relaxed mb-6">${w.text}</p>
-          
-          <div class="flex items-center justify-between text-sm text-gray-400">
-            <div class="flex items-center gap-6">
-              <button onclick="likeWish(${i})" class="flex items-center gap-1.5 hover:text-pink-400 transition-colors">
-                <i class="fas fa-heart"></i> <span class="font-medium">${w.likes || 0}</span>
+        document.getElementById('wishList').innerHTML = wishes.map(w => `
+          <div class="card bg-white/10 backdrop-blur-xl border border-purple-500 rounded-3xl p-8 mb-6">
+            <p class="text-[${18 + Math.min((w.likes||0)*2, 32)}px] leading-relaxed">${w.text}</p>
+            <div class="mt-6 flex justify-between text-sm text-gray-400">
+              <button onclick="likeWish('${w.id}')" class="flex items-center gap-1 hover:text-pink-400">
+                ❤️ ${w.likes || 0}
               </button>
               <span>${new Date(w.time).toLocaleDateString('zh-CN')}</span>
+              ${(myPosts.includes(w.id) || isAdmin) ? 
+                `<button onclick="deleteWish('${w.id}')" class="text-red-400 hover:text-red-500">删除</button>` : ''}
             </div>
-            ${isAdmin ? `<button onclick="deleteWish(${i})" class="text-red-400 hover:text-red-500"><i class="fas fa-trash"></i></button>` : ''}
           </div>
-        </div>
-      `).join('');
+        `).join('');
+      });
     }
 
     function postWish() {
       const text = document.getElementById('message').value.trim();
-      if (!text) return alert("写下你的心愿再许愿");
+      if (!text) return alert("请输入心愿");
       
-      let wishes = JSON.parse(localStorage.getItem('longWishes') || '[]');
-      wishes.unshift({ text, time: Date.now(), likes: 0 });
-      localStorage.setItem('longWishes', JSON.stringify(wishes));
+      const newPost = db.push({ text, time: Date.now(), likes: 0 });
+      const postId = newPost.key;
+      
+      myPosts.push(postId);
+      localStorage.setItem('myPosts', JSON.stringify(myPosts));
       
       document.getElementById('message').value = '';
-      loadWishes();
-      alert("✨ 心愿已许下，将长久留存");
+      alert("✨ 心愿已许下");
     }
 
-    function likeWish(i) {
-      let wishes = JSON.parse(localStorage.getItem('longWishes') || '[]');
-      wishes[i].likes = (wishes[i].likes || 0) + 1;
-      localStorage.setItem('longWishes', JSON.stringify(wishes));
-      loadWishes();
+    function likeWish(id) {
+      db.child(id).child('likes').transaction(v => (v || 0) + 1);
     }
 
-    function deleteWish(i) {
-      if (!confirm('确定删除这条心愿？')) return;
-      let wishes = JSON.parse(localStorage.getItem('longWishes') || '[]');
-      wishes.splice(i, 1);
-      localStorage.setItem('longWishes', JSON.stringify(wishes));
-      loadWishes();
+    function deleteWish(id) {
+      if (!confirm('确定删除这条心愿吗？')) return;
+      db.child(id).remove();
+      myPosts = myPosts.filter(p => p !== id);
+      localStorage.setItem('myPosts', JSON.stringify(myPosts));
     }
 
     function adminLogin() {
-      const u = prompt("管理员用户名", ADMIN_USER);
+      const u = prompt("管理员用户名", ADMIN.u);
       const p = prompt("管理员密码");
-      if (u === ADMIN_USER && p === ADMIN_PASS) {
+      if (u === ADMIN.u && p === ADMIN.p) {
         isAdmin = true;
-        alert("✅ 管理员已登录");
-        loadWishes();
+        alert("✅ 管理员模式已开启（可删除所有）");
       } else alert("账号或密码错误");
     }
 
