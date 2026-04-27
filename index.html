@@ -14,8 +14,13 @@
 </head>
 <body class="min-h-screen text-white p-6 pb-40">
   <div class="max-w-7xl mx-auto">
-    <h1 class="text-5xl font-bold text-center mb-2 bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">长久星球</h1>
-    <p class="text-center text-purple-300 mb-10">🌟 把心愿留在这里，长久陪伴</p>
+    <div class="flex justify-between items-center mb-8">
+      <div>
+        <h1 class="text-5xl font-bold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">长久星球</h1>
+        <p class="text-purple-300">🌟 把心愿留在这里，长久陪伴</p>
+      </div>
+      <button onclick="adminLogin()" class="glass px-6 py-2 rounded-2xl text-sm">👑 管理员登录</button>
+    </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
       <div class="lg:col-span-9">
@@ -43,41 +48,41 @@
   <script>
     firebase.initializeApp({ databaseURL: "https://changjiu-9280f-default-rtdb.asia-southeast1.firebasedatabase.app" });
     const db = firebase.database().ref('longWishes');
+    let isAdmin = false;
 
-    function createCard(v, showTime) {
+    function createCard(v) {
       const div = document.createElement('div');
       div.className = 'glass rounded-3xl p-7';
-      div.innerHTML = `
+      let html = `
         <p class="text-lg">${v.text}</p>
         <div class="mt-6 flex justify-between text-sm">
           <span class="text-pink-400">❤️ ${v.likes || 0}</span>
-          ${showTime ? `<span class="text-gray-400">${new Date(v.time).toLocaleString('zh-CN')}</span>` : ''}
-        </div>
-      `;
+          <span class="text-gray-400">${new Date(v.time).toLocaleString('zh-CN')}</span>
+        </div>`;
+      if (isAdmin) {
+        html += `<button onclick="deleteWish('${v.id}')" class="mt-3 text-red-400 text-sm">删除</button>`;
+      }
+      html += `</div>`;
+      div.innerHTML = html;
       return div;
     }
 
     function loadData() {
       db.on('value', snap => {
         console.log('收到数据，总条数:', snap.numChildren());
-        let list = [];
-        snap.forEach(c => list.push({id: c.key, ...c.val()}));
-
-        // 左侧最新（全部）
         const latestContainer = document.getElementById('latestList');
         latestContainer.innerHTML = '';
-        list.slice().sort((a,b) => b.time - a.time).forEach(v => {
-          latestContainer.appendChild(createCard(v, true));
+        let count = 0;
+        snap.forEach(c => {
+          const v = {id: c.key, ...c.val()};
+          latestContainer.appendChild(createCard(v));
+          count++;
         });
-        console.log('左侧渲染条数:', latestContainer.children.length);
+        console.log('左侧渲染条数:', count);
 
-        // 右侧排行
+        // 右侧排行（简单复制最新，实际可优化）
         const topContainer = document.getElementById('topList');
-        topContainer.innerHTML = '';
-        list.slice().sort((a,b) => (b.likes||0) - (a.likes||0)).slice(0,10).forEach(v => {
-          topContainer.appendChild(createCard(v, false));
-        });
-        console.log('右侧渲染条数:', topContainer.children.length);
+        topContainer.innerHTML = latestContainer.innerHTML;
       });
     }
 
@@ -86,6 +91,22 @@
       if (!text) return;
       db.push({ text, time: Date.now(), likes: 0 });
       document.getElementById('message').value = '';
+    }
+
+    window.deleteWish = function(id) {
+      if (!isAdmin || !confirm('确定删除这条心愿？')) return;
+      db.child(id).remove();
+    };
+
+    function adminLogin() {
+      const pass = prompt('请输入管理员密码');
+      if (pass === 'admin123') {
+        isAdmin = true;
+        alert('管理员登录成功，可以删除任何心愿');
+        loadData(); // 重新加载显示删除按钮
+      } else {
+        alert('密码错误');
+      }
     }
 
     loadData();
