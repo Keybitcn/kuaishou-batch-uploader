@@ -44,76 +44,37 @@
     firebase.initializeApp({ databaseURL: "https://changjiu-9280f-default-rtdb.asia-southeast1.firebasedatabase.app" });
     const db = firebase.database().ref('longWishes');
 
-    function createCard(v) {
-      const commentCount = v.comments ? Object.keys(v.comments).length : 0;
-      return `
-        <div class="glass rounded-3xl p-7">
-          <p class="text-lg">${v.text}</p>
-          <div class="mt-6 flex justify-between text-sm">
-            <button onclick="like('${v.id}')" class="flex items-center gap-2 text-pink-400">❤️ ${v.likes || 0}</button>
-            <button onclick="toggleComments('${v.id}')" class="flex items-center gap-2 text-purple-400">💬 ${commentCount}</button>
-            <span class="text-gray-400">${new Date(v.time).toLocaleString('zh-CN')}</span>
-          </div>
-          <div id="comments-${v.id}" class="hidden mt-6 border-t border-white/10 pt-4"></div>
-        </div>`;
-    }
-
     function loadData() {
       db.on('value', snap => {
         let list = [];
         snap.forEach(c => list.push({id: c.key, ...c.val()}));
 
-        // 左侧：全部最新（按时间倒序）
-        document.getElementById('latestList').innerHTML = list
-          .sort((a,b) => b.time - a.time)
-          .map(v => createCard(v)).join('');
+        // 最新心愿（全部，按时间倒序）
+        const latestHTML = list.sort((a,b) => b.time - a.time).map(v => `
+          <div class="glass rounded-3xl p-7">
+            <p class="text-lg">${v.text}</p>
+            <div class="mt-6 flex justify-between text-sm">
+              <span class="text-pink-400">❤️ ${v.likes || 0}</span>
+              <span class="text-gray-400">${new Date(v.time).toLocaleString('zh-CN')}</span>
+            </div>
+          </div>`).join('');
+        document.getElementById('latestList').innerHTML = latestHTML || '<p class="text-center py-20 text-gray-400">还没有心愿～</p>';
 
-        // 右侧：共鸣排行
-        document.getElementById('topList').innerHTML = list
-          .sort((a,b) => (b.likes||0) - (a.likes||0))
-          .slice(0,10)
-          .map(v => createCard(v)).join('');
+        // 共鸣排行
+        const topHTML = list.sort((a,b) => (b.likes||0) - (a.likes||0)).slice(0,10).map(v => `
+          <div class="glass rounded-3xl p-7">
+            <p class="text-lg">${v.text}</p>
+            <div class="mt-4 text-pink-400">❤️ ${v.likes || 0}</div>
+          </div>`).join('');
+        document.getElementById('topList').innerHTML = topHTML;
       });
     }
-
-    window.toggleComments = function(id) {
-      const container = document.getElementById(`comments-${id}`);
-      if (container.classList.contains('hidden')) {
-        container.classList.remove('hidden');
-        container.innerHTML = `<div id="comment-list-${id}" class="space-y-3 mb-4"></div><div class="flex gap-2"><input id="reply-${id}" class="flex-1 bg-white/10 border border-white/20 rounded-2xl px-4 py-2 text-sm" placeholder="回复..."><button onclick="postComment('${id}')" class="bg-purple-500 px-5 rounded-2xl text-sm">回复</button></div>`;
-        loadComments(id);
-      } else {
-        container.classList.add('hidden');
-      }
-    };
-
-    function loadComments(id) {
-      firebase.database().ref(`longWishes/${id}/comments`).on('value', snap => {
-        const el = document.getElementById(`comment-list-${id}`);
-        if (!el) return;
-        let html = '';
-        snap.forEach(c => html += `<div class="bg-white/5 p-3 rounded-2xl text-sm">${c.val().text}</div>`);
-        el.innerHTML = html || '<p class="text-gray-400 text-xs text-center py-2">还没有回复</p>';
-      });
-    }
-
-    window.postComment = function(id) {
-      const input = document.getElementById(`reply-${id}`);
-      const text = input.value.trim();
-      if (!text) return;
-      firebase.database().ref(`longWishes/${id}/comments`).push({text, time: Date.now()});
-      input.value = '';
-    };
 
     function postMessage() {
       const text = document.getElementById('message').value.trim();
       if (!text) return;
       db.push({ text, time: Date.now(), likes: 0 });
       document.getElementById('message').value = '';
-    }
-
-    function like(id) {
-      db.child(id).child('likes').transaction(v => (v || 0) + 1);
     }
 
     loadData();
