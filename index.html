@@ -20,21 +20,20 @@
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
       <div class="lg:col-span-9">
         <div class="glass rounded-3xl p-6">
-          <h2 class="text-2xl font-semibold mb-6">最新心愿</h2>
+          <h2 class="text-2xl mb-6">最新心愿</h2>
           <div id="latestList" class="space-y-6"></div>
         </div>
       </div>
       <div class="lg:col-span-3">
         <div class="glass rounded-3xl p-6 sticky top-6">
-          <h2 class="text-2xl font-semibold mb-6">🔥 共鸣排行</h2>
+          <h2 class="text-2xl mb-6">🔥 共鸣排行</h2>
           <div id="topList" class="space-y-6"></div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- 底部输入 -->
-  <div class="fixed bottom-0 left-0 right-0 bg-black/90 border-t border-white/10 p-6">
+  <div class="fixed bottom-0 left-0 right-0 bg-black/90 p-6">
     <div class="max-w-4xl mx-auto glass rounded-3xl p-6">
       <textarea id="message" rows="3" class="w-full bg-transparent text-lg placeholder-gray-400 focus:outline-none" placeholder="写下你的长久心愿..."></textarea>
       <button onclick="postMessage()" class="mt-4 w-full bg-gradient-to-r from-purple-500 to-pink-500 py-4 rounded-2xl font-bold">许下心愿</button>
@@ -47,19 +46,16 @@
 
     function createCard(v) {
       const commentCount = v.comments ? Object.keys(v.comments).length : 0;
-      let html = `
+      return `
         <div class="glass rounded-3xl p-7">
           <p class="text-lg">${v.text}</p>
           <div class="mt-6 flex justify-between text-sm">
-            <button onclick="like('${v.id}')" class="flex items-center gap-2 text-pink-400 hover:text-pink-300">❤️ ${v.likes || 0}</button>
-            <button onclick="toggleComments('${v.id}')" class="flex items-center gap-2 text-purple-400 hover:text-purple-300">
-              💬 ${commentCount}
-            </button>
+            <button onclick="like('${v.id}')" class="flex items-center gap-2 text-pink-400">❤️ ${v.likes || 0}</button>
+            <button onclick="toggleComments('${v.id}')" class="flex items-center gap-2 text-purple-400">💬 ${commentCount}</button>
             <span class="text-gray-400">${new Date(v.time).toLocaleString('zh-CN')}</span>
           </div>
-          <div id="comments-${v.id}" class="hidden mt-6 border-t border-white/10 pt-4"></div>
+          <div id="comments-${v.id}" class="hidden mt-6 border-t pt-4"></div>
         </div>`;
-      return html;
     }
 
     function loadData() {
@@ -67,30 +63,20 @@
         let list = [];
         snap.forEach(c => list.push({id: c.key, ...c.val()}));
 
-        // 最新
-        document.getElementById('latestList').innerHTML = list
-          .sort((a,b) => b.time - a.time)
-          .map(v => createCard(v)).join('');
-
-        // 排行
-        document.getElementById('topList').innerHTML = list
-          .sort((a,b) => (b.likes||0) - (a.likes||0)).slice(0,10)
-          .map(v => createCard(v)).join('');
+        document.getElementById('latestList').innerHTML = list.sort((a,b)=>b.time-a.time).map(v => createCard(v)).join('');
+        document.getElementById('topList').innerHTML = list.sort((a,b)=>(b.likes||0)-(a.likes||0)).slice(0,10).map(v => createCard(v)).join('');
       });
     }
 
     window.toggleComments = function(id) {
       const container = document.getElementById(`comments-${id}`);
-      if (!container) return;
-
       if (container.classList.contains('hidden')) {
-        // 显示评论
         container.classList.remove('hidden');
         container.innerHTML = `
-          <div class="space-y-4 mb-4" id="comment-list-${id}"></div>
+          <div id="comment-list-${id}" class="space-y-3 mb-4"></div>
           <div class="flex gap-2">
-            <input id="reply-input-${id}" type="text" class="flex-1 bg-white/10 border border-white/20 rounded-2xl px-4 py-2 text-sm" placeholder="回复这条心愿...">
-            <button onclick="postComment('${id}')" class="bg-purple-500 px-6 rounded-2xl text-sm font-medium">回复</button>
+            <input id="reply-${id}" class="flex-1 bg-white/10 border border-white/20 rounded-2xl px-4 py-2 text-sm" placeholder="回复...">
+            <button onclick="postComment('${id}')" class="bg-purple-500 px-5 rounded-2xl text-sm">回复</button>
           </div>`;
         loadComments(id);
       } else {
@@ -100,25 +86,19 @@
 
     function loadComments(id) {
       firebase.database().ref(`longWishes/${id}/comments`).on('value', snap => {
-        const listEl = document.getElementById(`comment-list-${id}`);
-        if (!listEl) return;
+        const el = document.getElementById(`comment-list-${id}`);
+        if (!el) return;
         let html = '';
-        snap.forEach(c => {
-          const com = c.val();
-          html += `<div class="bg-white/5 rounded-2xl p-3 text-sm">${com.text}</div>`;
-        });
-        listEl.innerHTML = html || '<p class="text-gray-400 text-center py-2 text-xs">还没有回复</p>';
+        snap.forEach(c => html += `<div class="bg-white/5 p-3 rounded-2xl text-sm">${c.val().text}</div>`);
+        el.innerHTML = html || '<p class="text-gray-400 text-xs text-center py-2">还没有回复</p>';
       });
     }
 
     window.postComment = function(id) {
-      const input = document.getElementById(`reply-input-${id}`);
+      const input = document.getElementById(`reply-${id}`);
       const text = input.value.trim();
       if (!text) return;
-      firebase.database().ref(`longWishes/${id}/comments`).push({
-        text: text,
-        time: Date.now()
-      });
+      firebase.database().ref(`longWishes/${id}/comments`).push({text});
       input.value = '';
     };
 
