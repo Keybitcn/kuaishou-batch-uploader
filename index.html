@@ -14,13 +14,8 @@
 </head>
 <body class="min-h-screen text-white p-6 pb-40">
   <div class="max-w-7xl mx-auto">
-    <div class="flex justify-between items-center mb-8">
-      <div>
-        <h1 class="text-5xl font-bold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">长久星球</h1>
-        <p class="text-purple-300">🌟 把心愿留在这里，长久陪伴</p>
-      </div>
-      <button onclick="adminLogin()" class="glass px-6 py-2 rounded-2xl text-sm">👑 管理员</button>
-    </div>
+    <h1 class="text-5xl font-bold text-center mb-2 bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent">长久星球</h1>
+    <p class="text-center text-purple-300 mb-10">🌟 把心愿留在这里，长久陪伴</p>
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
       <div class="lg:col-span-9">
@@ -48,88 +43,49 @@
   <script>
     firebase.initializeApp({ databaseURL: "https://changjiu-9280f-default-rtdb.asia-southeast1.firebasedatabase.app" });
     const db = firebase.database().ref('longWishes');
-    let isAdmin = false;
 
     function createCard(v) {
-      const commentCount = v.comments ? Object.keys(v.comments).length : 0;
-      let html = `
-        <div class="glass rounded-3xl p-7">
-          <p class="text-lg">${v.text}</p>
-          <div class="mt-6 flex justify-between text-sm">
-            <span class="text-pink-400">❤️ ${v.likes || 0}</span>
-            <button onclick="toggleComments('${v.id}')" class="text-purple-400">💬 ${commentCount}</button>
-            <span class="text-gray-400">${new Date(v.time).toLocaleString('zh-CN')}</span>
-          </div>
-          <div id="comments-${v.id}" class="hidden mt-6 border-t border-white/10 pt-4"></div>`;
-      if (isAdmin) html += `<button onclick="deleteWish('${v.id}')" class="mt-3 text-red-400 text-sm">删除</button>`;
-      html += `</div>`;
-      return html;
+      const div = document.createElement('div');
+      div.className = 'glass rounded-3xl p-7';
+      div.innerHTML = `
+        <p class="text-lg">${v.text}</p>
+        <div class="mt-6 flex justify-between text-sm">
+          <span class="text-pink-400">❤️ ${v.likes || 0}</span>
+          <span class="text-gray-400">${new Date(v.time).toLocaleString('zh-CN')}</span>
+        </div>
+      `;
+      return div;
     }
 
     function loadData() {
       db.on('value', snap => {
+        console.log('收到数据，总条数:', snap.numChildren());
+        const latestContainer = document.getElementById('latestList');
+        latestContainer.innerHTML = '';
         let list = [];
         snap.forEach(c => list.push({id: c.key, ...c.val()}));
 
-        document.getElementById('latestList').innerHTML = list
-          .sort((a,b) => b.time - a.time)
-          .map(v => createCard(v)).join('');
+        // 最新心愿（全部，按时间倒序）
+        list.sort((a,b) => b.time - a.time).forEach(v => {
+          latestContainer.appendChild(createCard(v));
+        });
+        console.log('左侧渲染条数:', latestContainer.children.length);
 
-        document.getElementById('topList').innerHTML = list
-          .sort((a,b) => (b.likes||0) - (a.likes||0))
-          .slice(0,10)
-          .map(v => createCard(v)).join('');
+        // 共鸣排行
+        const topContainer = document.getElementById('topList');
+        topContainer.innerHTML = '';
+        list.sort((a,b) => (b.likes||0) - (a.likes||0)).slice(0,10).forEach(v => {
+          topContainer.appendChild(createCard(v));
+        });
+        console.log('右侧渲染条数:', topContainer.children.length);
       });
     }
-
-    window.toggleComments = function(id) {
-      const container = document.getElementById(`comments-${id}`);
-      if (container.classList.contains('hidden')) {
-        container.classList.remove('hidden');
-        container.innerHTML = `<div id="comment-list-${id}" class="space-y-3 mb-4"></div><div class="flex gap-2"><input id="reply-${id}" class="flex-1 bg-white/10 border border-white/20 rounded-2xl px-4 py-2 text-sm" placeholder="回复..."><button onclick="postComment('${id}')" class="bg-purple-500 px-5 rounded-2xl text-sm">回复</button></div>`;
-        loadComments(id);
-      } else {
-        container.classList.add('hidden');
-      }
-    };
-
-    function loadComments(id) {
-      firebase.database().ref(`longWishes/${id}/comments`).on('value', snap => {
-        const el = document.getElementById(`comment-list-${id}`);
-        if (!el) return;
-        let html = '';
-        snap.forEach(c => html += `<div class="bg-white/5 p-3 rounded-2xl text-sm">${c.val().text}</div>`);
-        el.innerHTML = html || '<p class="text-gray-400 text-xs text-center py-2">还没有回复</p>';
-      });
-    }
-
-    window.postComment = function(id) {
-      const input = document.getElementById(`reply-${id}`);
-      const text = input.value.trim();
-      if (!text) return;
-      firebase.database().ref(`longWishes/${id}/comments`).push({text, time: Date.now()});
-      input.value = '';
-    };
 
     function postMessage() {
       const text = document.getElementById('message').value.trim();
       if (!text) return;
       db.push({ text, time: Date.now(), likes: 0 });
       document.getElementById('message').value = '';
-    }
-
-    window.deleteWish = function(id) {
-      if (!isAdmin || !confirm('确定删除？')) return;
-      db.child(id).remove();
-    };
-
-    function adminLogin() {
-      const pass = prompt('管理员密码');
-      if (pass === 'admin123') {
-        isAdmin = true;
-        alert('管理员登录成功');
-        loadData();
-      } else alert('密码错误');
     }
 
     loadData();
