@@ -1,5 +1,6 @@
 import { Avatar } from "@/components/Avatar";
 import { createPageMetadata } from "@/lib/metadata";
+import { aboutContent } from "@/lib/about";
 import { siteConfig } from "@/lib/site";
 
 export const metadata = createPageMetadata({
@@ -16,13 +17,14 @@ export default function AboutPage() {
           <Avatar size="lg" />
           <div>
             <h1 className="text-lg font-semibold">{siteConfig.author}</h1>
-            <p className="text-[0.75rem] text-[var(--hermes-muted)]">博主</p>
+            <p className="text-[0.75rem] text-[var(--hermes-muted)]">
+              {aboutContent.role}
+            </p>
           </div>
         </div>
 
         <p className="text-[0.8125rem] text-[var(--hermes-muted)] leading-relaxed mb-6">
-          这个博客是我记录学习、思考与创作的个人空间。
-          关注 Web 开发、开源工具与效率提升。
+          {aboutContent.bio}
         </p>
 
         <div className="border border-[var(--hermes-border)] rounded-lg p-5">
@@ -30,7 +32,10 @@ export default function AboutPage() {
           <div className="space-y-2 text-[0.8125rem]">
             <p>
               <span className="text-[var(--hermes-muted)]">邮箱 · </span>
-              <a href={`mailto:${siteConfig.email}`} className="text-[var(--hermes-blue)] hover:underline">
+              <a
+                href={`mailto:${siteConfig.email}`}
+                className="text-[var(--hermes-blue)] hover:underline"
+              >
                 {siteConfig.email}
               </a>
             </p>

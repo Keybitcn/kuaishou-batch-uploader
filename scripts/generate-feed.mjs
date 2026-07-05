@@ -7,8 +7,12 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, "..");
 const postsDir = path.join(root, "content/posts");
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://quna.fun";
-const siteName = "Key";
-const siteDescription = "记录思考、技术与生活";
+const siteFile = path.join(root, "content/site.json");
+const siteData = fs.existsSync(siteFile)
+  ? JSON.parse(fs.readFileSync(siteFile, "utf8"))
+  : { name: "Key", description: "记录思考、技术与生活" };
+const siteName = siteData.name;
+const siteDescription = siteData.description;
 
 function escapeXml(text) {
   return text

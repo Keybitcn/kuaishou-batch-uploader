@@ -1,0 +1,73 @@
+# Key 博客后台 — 修改后保存会自动提交到 GitHub，Cloudflare 自动部署
+backend:
+  name: github
+  repo: Keybitcn/kuaishou-batch-uploader
+  branch: main
+  squash_merges: true
+  # 非 Netlify 托管需在 https://decapbridge.com 注册，取消下面两行注释并填入你的地址
+  # base_url: https://YOUR-ID.decapbridge.com
+  # auth_endpoint: auth
+
+local_backend: true
+
+media_folder: public/uploads
+public_folder: /uploads
+
+locale: zh_Hans
+
+slug:
+  encoding: unicode
+  clean_accents: true
+
+collections:
+  - name: site
+    label: 网站设置
+    files:
+      - name: settings
+        label: 基本信息
+        file: content/site.json
+        fields:
+          - { label: 站点简称, name: name, widget: string, hint: "显示在状态栏等位置" }
+          - { label: 页面标题, name: title, widget: string, hint: "浏览器标签页标题" }
+          - { label: 站点描述, name: description, widget: text }
+          - { label: 作者名, name: author, widget: string }
+          - { label: 邮箱, name: email, widget: string }
+          - { label: GitHub 链接, name: github, widget: string }
+          - { label: 头像, name: avatar, widget: image, hint: "可上传图片或填写路径如 /avatar.svg" }
+
+  - name: about
+    label: 关于页面
+    files:
+      - name: about
+        label: 关于内容
+        file: content/about.json
+        fields:
+          - { label: 身份标签, name: role, widget: string, default: "博主" }
+          - { label: 个人简介, name: bio, widget: text }
+
+  - name: posts
+    label: 文章
+    label_singular: 文章
+    folder: content/posts
+    create: true
+    slug: "{{slug}}"
+    extension: md
+    format: frontmatter
+    identifier_field: title
+    summary: "{{excerpt}}"
+    sortable_fields: ["date", "title"]
+    view_filters:
+      - label: 草稿（无日期）
+        field: date
+        pattern: ""
+    fields:
+      - { label: 标题, name: title, widget: string }
+      - label: 发布日期
+        name: date
+        widget: datetime
+        date_format: YYYY-MM-DD
+        time_format: false
+        default: ""
+      - { label: 摘要, name: excerpt, widget: text, hint: "显示在文章列表" }
+      - { label: 标签, name: tags, widget: list, default: [] }
+      - { label: 正文, name: body, widget: markdown }

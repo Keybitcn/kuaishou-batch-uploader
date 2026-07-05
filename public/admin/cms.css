@@ -1,0 +1,47 @@
+:root,
+[data-theme="dark"] {
+  --primary: #3b82f6;
+  --primary-dark: #2563eb;
+  --background: #0a0a0a;
+  --background-panel: #111111;
+  --background-panel-hover: #1a1a1a;
+  --text: #f0f0f0;
+  --text-light: #a3a3a3;
+  --border: #262626;
+  --border-light: #333333;
+}
+
+body {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+[class*="AppHeader"],
+[class*="Sidebar"],
+[class*="CollectionTop"],
+[class*="EditorControlBar"] {
+  background: #111 !important;
+  border-color: #262626 !important;
+}
+
+[class*="ControlPane"],
+[class*="Pane"],
+[class*="Editor"],
+[class*="PreviewPane"] {
+  background: #0a0a0a !important;
+}
+
+input,
+textarea,
+select,
+[class*="Dropdown"],
+[class*="Control"] {
+  background: #111 !important;
+  color: #f0f0f0 !important;
+  border-color: #333 !important;
+}
+
+a,
+button[class*="Button"][class*="primary"] {
+  background: #3b82f6 !important;
+  border-color: #3b82f6 !important;
+}

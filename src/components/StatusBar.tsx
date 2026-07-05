@@ -16,6 +16,9 @@ export function StatusBar() {
         </a>
       </div>
       <div className="flex items-stretch">
+        <a href="/admin/" className="hermes-statusbar-item">
+          后台
+        </a>
         <a
           href={siteConfig.github}
           target="_blank"
@@ -24,9 +27,6 @@ export function StatusBar() {
         >
           GitHub
         </a>
-        <span className="hermes-statusbar-item" style={{ cursor: "default" }}>
-          Nous
-        </span>
       </div>
     </footer>
   );
