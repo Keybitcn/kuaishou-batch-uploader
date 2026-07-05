@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { format } from "date-fns";
 import { zhCN } from "date-fns/locale";
 import { CopyLinkButton } from "@/components/CopyLinkButton";
-import { GiscusComments } from "@/components/GiscusComments";
 import { PostNavigation } from "@/components/PostNavigation";
 import { ReadingProgress } from "@/components/ReadingProgress";
 import { TagBadge } from "@/components/TagBadge";
@@ -82,11 +81,6 @@ export default async function PostPage({ params }: PageProps) {
         <div className="hermes-card p-6 mt-4">
           <PostNavigation prev={prev} next={next} />
         </div>
-
-        <section className="mt-4">
-          <p className="hermes-section-label mb-2">评论</p>
-          <GiscusComments />
-        </section>
       </article>
     </>
   );
