@@ -1,6 +1,6 @@
 backend:
   name: github
-  repo: Keybitcn/kuaishou-batch-uploader
+  repo: Keybitcn/akeyman
   branch: main
   squash_merges: true
   base_url: https://quna.fun
