@@ -3,7 +3,8 @@ backend:
   repo: Keybitcn/akeyman
   branch: main
   squash_merges: true
-  base_url: https://quna.fun
+  # base_url 由 index.html 自动设为当前域名，避免走 Netlify 登录
+  base_url: http://localhost:3000
   auth_endpoint: auth
 
 media_folder: public/uploads

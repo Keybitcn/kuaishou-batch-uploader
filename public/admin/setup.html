@@ -27,34 +27,36 @@
       a { color: #60a5fa; }
       ol { padding-left: 20px; }
       li { margin: 8px 0; }
+      #origin { color: #93c5fd; }
     </style>
   </head>
   <body>
     <h1>博客后台配置说明</h1>
-    <p>后台使用 Decap CMS，需要一次性配置 GitHub 登录授权。</p>
+    <p>本站使用 Cloudflare + 自建 OAuth，<strong>不会</strong>走 Netlify 登录。</p>
 
     <h2>1. 创建 GitHub OAuth 应用</h2>
     <ol>
-      <li>打开 <a href="https://github.com/settings/applications/new" target="_blank" rel="noopener">GitHub OAuth 应用创建页</a></li>
-      <li>Application name：随意，例如 <code>Blog Admin</code></li>
-      <li>Homepage URL：<code>https://quna.fun</code></li>
-      <li>Authorization callback URL：<code>https://quna.fun/callback</code></li>
-      <li>创建后记下 <strong>Client ID</strong> 和 <strong>Client Secret</strong></li>
+      <li>打开 GitHub → Settings → Developer settings → OAuth Apps → New</li>
+      <li>Homepage URL：<code id="origin"></code></li>
+      <li>Authorization callback URL：<code id="callback"></code></li>
+      <li>记下 Client ID 和 Client Secret</li>
     </ol>
 
-    <h2>2. 在 Cloudflare Pages 添加环境变量</h2>
-    <p>进入 Cloudflare 控制台 → Pages → 你的项目 → Settings → Environment variables，添加：</p>
+    <h2>2. Cloudflare Pages 环境变量</h2>
+    <p>项目 Settings → Environment variables → Production，添加：</p>
     <pre>GITHUB_CLIENT_ID = 你的 Client ID
 GITHUB_CLIENT_SECRET = 你的 Client Secret
-ALLOWED_ORIGIN = quna.fun</pre>
-    <p>保存后重新部署一次。</p>
+ALLOWED_ORIGIN = quna.fun,www.quna.fun</pre>
+    <p>若只用单一域名访问，可只填一个，例如 <code id="allowed-origin"></code></p>
 
-    <h2>3. 打开后台</h2>
-    <p><a href="/admin/">返回后台</a>，点击 Login with GitHub 登录即可写文章。</p>
+    <h2>3. 重新部署后登录</h2>
+    <p><a href="/admin/">返回后台</a>，应跳转到 <code>/auth</code> 再跳转 GitHub，而不是 api.netlify.com。</p>
 
-    <h2>本地试用</h2>
-    <pre>npm run dev
-npm run cms</pre>
-    <p>然后访问 <code>http://localhost:3000/admin/</code></p>
+    <script>
+      var origin = window.location.origin;
+      document.getElementById("origin").textContent = origin;
+      document.getElementById("callback").textContent = origin + "/callback";
+      document.getElementById("allowed-origin").textContent = window.location.hostname;
+    </script>
   </body>
 </html>

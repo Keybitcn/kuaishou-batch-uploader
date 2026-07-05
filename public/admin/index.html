@@ -5,12 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
     <title>Key 博客后台</title>
-    <link rel="cms-config-url" type="text/yaml" href="config.yml" />
     <link rel="stylesheet" href="cms.css" />
     <style>
       #boot-hint {
         display: none;
-        max-width: 480px;
+        max-width: 520px;
         margin: 48px auto;
         padding: 24px;
         border: 1px solid #333;
@@ -29,17 +28,32 @@
   </head>
   <body>
     <div id="boot-hint">
-      <h1>后台加载失败？</h1>
-      <p>若长时间白屏，请确认已完成 OAuth 配置（见下方说明），并尝试刷新页面。</p>
-      <p><a href="setup.html">查看配置说明</a></p>
+      <h1>后台加载失败</h1>
+      <p id="boot-msg">正在加载配置…</p>
+      <p><a href="setup.html">查看 OAuth 配置说明</a></p>
     </div>
-    <script>
-      setTimeout(function () {
-        if (!window.CMS) {
-          document.getElementById("boot-hint").style.display = "block";
-        }
-      }, 8000);
-    </script>
+    <script>window.CMS_MANUAL_INIT = true;</script>
+    <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.1/dist/js-yaml.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/decap-cms@3.4.0/dist/decap-cms.js"></script>
+    <script>
+      (async function () {
+        var hint = document.getElementById("boot-hint");
+        var msg = document.getElementById("boot-msg");
+        try {
+          var res = await fetch("config.yml");
+          if (!res.ok) throw new Error("无法读取 config.yml");
+          var config = jsyaml.load(await res.text());
+          config.load_config_file = false;
+          config.backend.base_url = window.location.origin;
+          config.backend.auth_endpoint = "auth";
+          config.backend.site_domain = window.location.hostname;
+          window.CMS.init({ config: config });
+          hint.style.display = "none";
+        } catch (err) {
+          hint.style.display = "block";
+          msg.textContent = err && err.message ? err.message : "未知错误";
+        }
+      })();
+    </script>
   </body>
 </html>

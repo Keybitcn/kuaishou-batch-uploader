@@ -36,7 +36,7 @@ function authResponse(provider, status, content, origins) {
 export async function onRequestGet({ env, request }) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
-  const origins = env.ALLOWED_ORIGIN || "quna.fun";
+  const origins = env.ALLOWED_ORIGIN || "quna.fun,www.quna.fun";
 
   if (!code) {
     return new Response(authResponse("github", "error", { error: "missing_code" }, origins), {
