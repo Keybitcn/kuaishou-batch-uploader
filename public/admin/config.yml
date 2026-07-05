@@ -1,4 +1,4 @@
-# Key 博客后台 — 修改后保存会自动提交到 GitHub，Cloudflare 自动部署
+# Key 博客后台 — 保存后自动部署
 backend:
   name: github
   repo: Keybitcn/kuaishou-batch-uploader
@@ -31,8 +31,7 @@ collections:
           - { label: 页面标题, name: title, widget: string, hint: "浏览器标签页标题" }
           - { label: 站点描述, name: description, widget: text }
           - { label: 作者名, name: author, widget: string }
-          - { label: 邮箱, name: email, widget: string }
-          - { label: GitHub 链接, name: github, widget: string }
+          - { label: 邮箱, name: email, widget: string, required: false, hint: "留空则不显示" }
           - { label: 头像, name: avatar, widget: image, hint: "可上传图片或填写路径如 /avatar.svg" }
 
   - name: about

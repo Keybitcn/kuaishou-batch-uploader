@@ -19,14 +19,6 @@ export function StatusBar() {
         <a href="/admin/" className="hermes-statusbar-item">
           后台
         </a>
-        <a
-          href={siteConfig.github}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hermes-statusbar-item"
-        >
-          GitHub
-        </a>
       </div>
     </footer>
   );

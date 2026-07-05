@@ -10,20 +10,14 @@ export function Footer() {
           {siteConfig.name}
         </p>
         <div className="mb-8 flex items-center justify-center gap-8">
-          <a
-            href={siteConfig.github}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="label-caps link-editorial text-muted"
-          >
-            GitHub
-          </a>
-          <a
-            href={`mailto:${siteConfig.email}`}
-            className="label-caps link-editorial text-muted"
-          >
-            联系
-          </a>
+          {siteConfig.email ? (
+            <a
+              href={`mailto:${siteConfig.email}`}
+              className="label-caps link-editorial text-muted"
+            >
+              联系
+            </a>
+          ) : null}
           <a href="/feed.xml" className="label-caps link-editorial text-muted">
             RSS
           </a>

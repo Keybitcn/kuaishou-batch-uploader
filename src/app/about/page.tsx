@@ -23,14 +23,14 @@ export default function AboutPage() {
           </div>
         </div>
 
-        <p className="text-[0.8125rem] text-[var(--hermes-muted)] leading-relaxed mb-6">
+        <p className="text-[0.8125rem] text-[var(--hermes-muted)] leading-relaxed">
           {aboutContent.bio}
         </p>
 
-        <div className="border border-[var(--hermes-border)] rounded-lg p-5">
-          <p className="hermes-section-label mb-3 !px-0">联系方式</p>
-          <div className="space-y-2 text-[0.8125rem]">
-            <p>
+        {siteConfig.email ? (
+          <div className="border border-[var(--hermes-border)] rounded-lg p-5 mt-6">
+            <p className="hermes-section-label mb-3 !px-0">联系方式</p>
+            <p className="text-[0.8125rem]">
               <span className="text-[var(--hermes-muted)]">邮箱 · </span>
               <a
                 href={`mailto:${siteConfig.email}`}
@@ -39,19 +39,8 @@ export default function AboutPage() {
                 {siteConfig.email}
               </a>
             </p>
-            <p>
-              <span className="text-[var(--hermes-muted)]">GitHub · </span>
-              <a
-                href={siteConfig.github}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[var(--hermes-blue)] hover:underline"
-              >
-                {siteConfig.github}
-              </a>
-            </p>
           </div>
-        </div>
+        ) : null}
       </div>
     </div>
   );

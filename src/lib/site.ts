@@ -2,7 +2,7 @@ import siteData from "../../content/site.json";
 
 export const siteConfig = {
   ...siteData,
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://quna.fun",
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? "",
   locale: "zh_CN",
   accent: {
     primary: "#3B82F6",

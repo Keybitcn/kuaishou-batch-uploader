@@ -6,7 +6,7 @@ import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, "..");
 const postsDir = path.join(root, "content/posts");
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://quna.fun";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "";
 const siteFile = path.join(root, "content/site.json");
 const siteData = fs.existsSync(siteFile)
   ? JSON.parse(fs.readFileSync(siteFile, "utf8"))
