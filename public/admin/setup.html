@@ -1,34 +1,13 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="dark">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
     <title>配置说明</title>
     <link rel="stylesheet" href="cms.css" />
-    <style>
-      body {
-        max-width: 640px;
-        margin: 40px auto;
-        padding: 0 20px 60px;
-        font: 14px/1.7 system-ui, sans-serif;
-        color: #d4d4d4;
-        background: #0a0a0a;
-      }
-      h1 { color: #f0f0f0; font-size: 22px; }
-      h2 { color: #93c5fd; font-size: 16px; margin-top: 28px; }
-      code, pre {
-        background: #111;
-        border: 1px solid #333;
-        border-radius: 6px;
-        padding: 2px 6px;
-      }
-      pre { padding: 12px; overflow-x: auto; }
-      a { color: #60a5fa; }
-      #origin { color: #93c5fd; }
-    </style>
   </head>
-  <body>
+  <body data-theme="dark" class="admin-page">
     <h1>内容管理配置说明</h1>
     <p>本站使用 Cloudflare 自建登录，<strong>不会</strong>走 Netlify。</p>
 
@@ -39,9 +18,5 @@ ALLOWED_ORIGIN = quna.fun,www.quna.fun</pre>
 
     <h2>登录</h2>
     <p><a href="/admin/">返回管理页</a>，访问 <code>/auth</code> 完成登录。</p>
-
-    <script>
-      document.getElementById("origin");
-    </script>
   </body>
 </html>

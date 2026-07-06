@@ -6,27 +6,9 @@
     <meta name="robots" content="noindex, nofollow" />
     <title>Key 博客</title>
     <link rel="stylesheet" href="cms.css" />
-    <style>
-      #boot-hint {
-        display: none;
-        max-width: 520px;
-        margin: 48px auto;
-        padding: 24px;
-        border: 1px solid #333;
-        border-radius: 8px;
-        background: #111;
-        color: #a3a3a3;
-        font: 14px/1.6 system-ui, sans-serif;
-      }
-      #boot-hint h1 {
-        margin: 0 0 12px;
-        color: #f0f0f0;
-        font-size: 18px;
-      }
-      #boot-hint a { color: #60a5fa; }
-    </style>
+    <style>#boot-hint { display: none; margin-top: 48px; }</style>
   </head>
-  <body>
+  <body data-theme="dark">
     <div id="boot-hint">
       <h1>加载失败</h1>
       <p id="boot-msg">正在加载配置…</p>
@@ -47,6 +29,7 @@
           config.backend.base_url = window.location.origin;
           config.backend.auth_endpoint = "auth";
           config.backend.site_domain = window.location.hostname;
+          document.documentElement.setAttribute("data-theme", "dark");
           window.CMS.init({ config: config });
           hint.style.display = "none";
         } catch (err) {

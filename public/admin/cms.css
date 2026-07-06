@@ -1,7 +1,11 @@
 :root,
+html,
+html[data-theme="dark"],
 [data-theme="dark"] {
+  color-scheme: dark;
   --primary: #3b82f6;
   --primary-dark: #2563eb;
+  --primary-light: #60a5fa;
   --background: #0a0a0a;
   --background-panel: #111111;
   --background-panel-hover: #1a1a1a;
@@ -9,39 +13,315 @@
   --text-light: #a3a3a3;
   --border: #262626;
   --border-light: #333333;
+  --hermes-bg: #0a0a0a;
+  --hermes-panel: #111111;
+  --hermes-card: #141414;
+  --hermes-fg: #f0f0f0;
+  --hermes-muted: #a3a3a3;
+  --hermes-border: #333333;
 }
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
 body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--hermes-bg) !important;
+  color: var(--hermes-fg) !important;
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
-[class*="AppHeader"],
-[class*="Sidebar"],
-[class*="CollectionTop"],
-[class*="EditorControlBar"] {
-  background: #111 !important;
-  border-color: #262626 !important;
+#nc-root,
+#nc-root > div,
+[class*="App"],
+[class*="NetlifyCMS"] {
+  background: var(--hermes-bg) !important;
+  color: var(--hermes-fg) !important;
 }
 
+/* 登录页 */
+[class*="Login"],
+[class*="AuthenticationPage"],
+[class*="AuthPage"] {
+  background: var(--hermes-bg) !important;
+  color: var(--hermes-fg) !important;
+}
+
+[class*="LoginCard"],
+[class*="AuthForm"] {
+  background: var(--hermes-card) !important;
+  border: 1px solid var(--hermes-border) !important;
+  color: var(--hermes-fg) !important;
+  box-shadow: none !important;
+}
+
+/* 顶栏 / 侧栏 */
+[class*="AppHeader"],
+[class*="TopBar"],
+[class*="Sidebar"],
+[class*="CollectionTop"],
+[class*="EditorControlBar"],
+[class*="Toolbar"],
+[class*="ControlPaneHeading"] {
+  background: var(--hermes-panel) !important;
+  border-color: var(--hermes-border) !important;
+  color: var(--hermes-fg) !important;
+}
+
+[class*="Sidebar"] a,
+[class*="Sidebar"] button,
+[class*="NavLink"] {
+  color: var(--hermes-muted) !important;
+  background: transparent !important;
+}
+
+[class*="Sidebar"] a[class*="active"],
+[class*="Sidebar"] [class*="active"],
+[class*="NavLink"][class*="active"] {
+  color: var(--primary-light) !important;
+  background: #1a1a1a !important;
+}
+
+/* 主编辑区 */
+[class*="MainContainer"],
 [class*="ControlPane"],
 [class*="Pane"],
 [class*="Editor"],
-[class*="PreviewPane"] {
-  background: #0a0a0a !important;
+[class*="EditorPane"],
+[class*="PreviewPane"],
+[class*="ScrollContainer"],
+[class*="Workflow"],
+[class*="CollectionMain"],
+[class*="ListContainer"] {
+  background: var(--hermes-bg) !important;
+  color: var(--hermes-fg) !important;
+  border-color: var(--hermes-border) !important;
 }
 
+/* 卡片 / 列表项 */
+[class*="Card"],
+[class*="ListCard"],
+[class*="EntryCard"],
+[class*="MediaCard"],
+[class*="TableRow"],
+[class*="ListItem"] {
+  background: var(--hermes-card) !important;
+  border-color: var(--hermes-border) !important;
+  color: var(--hermes-fg) !important;
+}
+
+[class*="Card"]:hover,
+[class*="ListCard"]:hover,
+[class*="EntryCard"]:hover,
+[class*="MediaCard"]:hover,
+[class*="TableRow"]:hover,
+[class*="ListItem"]:hover {
+  background: #1a1a1a !important;
+}
+
+/* 表单控件 */
 input,
 textarea,
 select,
+[class*="Input"],
+[class*="TextArea"],
 [class*="Dropdown"],
-[class*="Control"] {
-  background: #111 !important;
-  color: #f0f0f0 !important;
-  border-color: #333 !important;
+[class*="Control"],
+[class*="FieldLabel"],
+[class*="ReactSelect"] [class*="control"] {
+  background: var(--hermes-panel) !important;
+  color: var(--hermes-fg) !important;
+  border-color: var(--hermes-border) !important;
 }
 
-a,
-button[class*="Button"][class*="primary"] {
-  background: #3b82f6 !important;
-  border-color: #3b82f6 !important;
+input::placeholder,
+textarea::placeholder {
+  color: #666 !important;
+}
+
+label,
+[class*="Label"],
+[class*="FieldLabel"],
+[class*="ControlLabel"],
+legend,
+[class*="Hint"] {
+  color: var(--hermes-muted) !important;
+}
+
+/* 链接：仅文字高亮，不做按钮底 */
+a {
+  color: var(--primary-light) !important;
+  background: transparent !important;
+  border-color: transparent !important;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #93c5fd !important;
+}
+
+/* 按钮 */
+button,
+[class*="Button"] {
+  color: var(--hermes-fg) !important;
+  border-color: var(--hermes-border) !important;
+}
+
+button[class*="primary"],
+[class*="Button"][class*="primary"],
+[class*="LoginButton"] {
+  background: var(--primary) !important;
+  border-color: var(--primary) !important;
+  color: #ffffff !important;
+}
+
+button[class*="primary"]:hover,
+[class*="Button"][class*="primary"]:hover,
+[class*="LoginButton"]:hover {
+  background: var(--primary-dark) !important;
+  border-color: var(--primary-dark) !important;
+}
+
+button[class*="gray"],
+[class*="Button"][class*="gray"],
+[class*="Button"][class*="default"]:not([class*="primary"]) {
+  background: var(--hermes-panel) !important;
+  color: var(--hermes-fg) !important;
+}
+
+/* 下拉 / 弹层 */
+[class*="dropdown"],
+[class*="Dropdown"],
+[class*="Popover"],
+[class*="Modal"],
+[class*="ReactModal"],
+[class*="Menu"],
+[class*="menu"] {
+  background: var(--hermes-card) !important;
+  color: var(--hermes-fg) !important;
+  border-color: var(--hermes-border) !important;
+}
+
+[class*="ReactModal__Overlay"] {
+  background: rgba(0, 0, 0, 0.72) !important;
+}
+
+[class*="ReactModal__Content"],
+[class*="ModalContent"] {
+  background: var(--hermes-card) !important;
+  color: var(--hermes-fg) !important;
+  border: 1px solid var(--hermes-border) !important;
+}
+
+/* Markdown 编辑器 */
+.CodeMirror,
+[class*="MarkdownControl"] .CodeMirror,
+[class*="Editor"] .CodeMirror {
+  background: var(--hermes-panel) !important;
+  color: var(--hermes-fg) !important;
+  border: 1px solid var(--hermes-border) !important;
+}
+
+.CodeMirror-gutters {
+  background: #0d0d0d !important;
+  border-color: var(--hermes-border) !important;
+}
+
+.cm-s-default .cm-header,
+.cm-s-default .cm-strong,
+.cm-s-default .cm-em,
+.cm-s-default .cm-link,
+.cm-s-default .cm-url,
+.cm-s-default .cm-quote {
+  color: var(--hermes-fg) !important;
+}
+
+.cm-s-default .cm-comment {
+  color: #6b7280 !important;
+}
+
+.cm-s-default .cm-keyword {
+  color: var(--primary-light) !important;
+}
+
+/* 预览区 */
+[class*="PreviewPane"] iframe,
+[class*="PreviewPane"] {
+  background: #ffffff;
+}
+
+/* 表格 */
+table,
+thead,
+tbody,
+tr,
+th,
+td {
+  background: var(--hermes-bg) !important;
+  color: var(--hermes-fg) !important;
+  border-color: var(--hermes-border) !important;
+}
+
+/* 滚动条 */
+* {
+  scrollbar-color: #333 #0a0a0a;
+  scrollbar-width: thin;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 4px;
+}
+
+/* 启动提示 / 配置页 */
+#boot-hint,
+.admin-page {
+  max-width: 640px;
+  margin: 40px auto;
+  padding: 24px;
+  border: 1px solid var(--hermes-border);
+  border-radius: 8px;
+  background: var(--hermes-card);
+  color: var(--hermes-muted);
+  font: 14px/1.7 system-ui, sans-serif;
+}
+
+#boot-hint h1,
+.admin-page h1 {
+  margin: 0 0 12px;
+  color: var(--hermes-fg);
+  font-size: 20px;
+}
+
+.admin-page h2 {
+  color: var(--primary-light);
+  font-size: 16px;
+  margin-top: 28px;
+}
+
+.admin-page code,
+.admin-page pre {
+  background: var(--hermes-panel);
+  border: 1px solid var(--hermes-border);
+  border-radius: 6px;
+  color: var(--hermes-fg);
+}
+
+.admin-page pre {
+  padding: 12px;
+  overflow-x: auto;
 }
