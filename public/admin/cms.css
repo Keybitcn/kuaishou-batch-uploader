@@ -1,53 +1,16 @@
-:root,
-html,
-html[data-theme="dark"],
-[data-theme="dark"] {
-  color-scheme: dark;
-  --primary: #3b82f6;
-  --primary-dark: #2563eb;
-  --primary-light: #60a5fa;
-  --background: #0a0a0a;
-  --background-panel: #111111;
-  --background-panel-hover: #1a1a1a;
-  --text: #f0f0f0;
-  --text-light: #a3a3a3;
-  --border: #262626;
-  --border-light: #333333;
-  --hermes-bg: #0a0a0a;
-  --hermes-panel: #111111;
-  --hermes-card: #141414;
-  --hermes-fg: #f0f0f0;
-  --hermes-muted: #a3a3a3;
-  --hermes-border: #333333;
-
-  /* Toastify 深色主题 */
-  --toastify-color-light: #141414;
-  --toastify-color-dark: #141414;
-  --toastify-color-info: #3b82f6;
-  --toastify-color-success: #22c55e;
-  --toastify-color-warning: #eab308;
-  --toastify-color-error: #ef4444;
-  --toastify-color-transparent: rgba(255, 255, 255, 0.08);
-  --toastify-icon-color-info: var(--toastify-color-info);
-  --toastify-icon-color-success: var(--toastify-color-success);
-  --toastify-icon-color-warning: var(--toastify-color-warning);
-  --toastify-icon-color-error: var(--toastify-color-error);
-  --toastify-toast-background: #141414;
-  --toastify-font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-  --toastify-text-color-light: #f0f0f0;
-  --toastify-text-color-dark: #f0f0f0;
-  --toastify-text-color-info: #f0f0f0;
-  --toastify-text-color-success: #f0f0f0;
-  --toastify-text-color-warning: #0a0a0a;
-  --toastify-text-color-error: #f0f0f0;
-  --toastify-spinner-color: #60a5fa;
-  --toastify-spinner-color-empty-area: #333333;
-  --toastify-color-progress-light: #3b82f6;
-  --toastify-color-progress-dark: #60a5fa;
-  --toastify-color-progress-info: var(--toastify-color-info);
-  --toastify-color-progress-success: var(--toastify-color-success);
-  --toastify-color-progress-warning: var(--toastify-color-warning);
-  --toastify-color-progress-error: var(--toastify-color-error);
+/* 简约浅色后台 — 高对比、易读 */
+:root {
+  color-scheme: light;
+  --bg: #f5f5f5;
+  --surface: #ffffff;
+  --text: #111827;
+  --text-secondary: #4b5563;
+  --border: #d1d5db;
+  --accent: #2563eb;
+  --accent-soft: #eff6ff;
+  --danger: #dc2626;
+  --radius: 8px;
+  --font: system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
 }
 
 *,
@@ -60,337 +23,350 @@ html,
 body {
   margin: 0;
   min-height: 100%;
-  background: var(--hermes-bg) !important;
-  color: var(--hermes-fg) !important;
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.6;
 }
 
 #nc-root,
-#nc-root > div,
-[class*="App"],
-[class*="NetlifyCMS"] {
-  background: var(--hermes-bg) !important;
-  color: var(--hermes-fg) !important;
+#nc-root * {
+  font-family: var(--font) !important;
 }
 
-/* 登录页 */
-[class*="Login"],
-[class*="AuthenticationPage"],
-[class*="AuthPage"] {
-  background: var(--hermes-bg) !important;
-  color: var(--hermes-fg) !important;
+#nc-root,
+[class*="App"] {
+  background: var(--bg) !important;
+  color: var(--text) !important;
 }
 
-[class*="LoginCard"],
-[class*="AuthForm"] {
-  background: var(--hermes-card) !important;
-  border: 1px solid var(--hermes-border) !important;
-  color: var(--hermes-fg) !important;
-  box-shadow: none !important;
-}
-
-/* 顶栏 / 侧栏 */
+/* 顶栏 */
 [class*="AppHeader"],
-[class*="TopBar"],
-[class*="Sidebar"],
-[class*="CollectionTop"],
-[class*="EditorControlBar"],
-[class*="Toolbar"],
-[class*="ControlPaneHeading"] {
-  background: var(--hermes-panel) !important;
-  border-color: var(--hermes-border) !important;
-  color: var(--hermes-fg) !important;
+[class*="TopBar"] {
+  background: var(--surface) !important;
+  border-bottom: 1px solid var(--border) !important;
+  color: var(--text) !important;
+}
+
+/* 侧栏 */
+[class*="Sidebar"] {
+  background: var(--surface) !important;
+  border-right: 1px solid var(--border) !important;
 }
 
 [class*="Sidebar"] a,
 [class*="Sidebar"] button,
 [class*="NavLink"] {
-  color: var(--hermes-muted) !important;
+  color: var(--text-secondary) !important;
   background: transparent !important;
+  font-size: 15px !important;
 }
 
-[class*="Sidebar"] a[class*="active"],
 [class*="Sidebar"] [class*="active"],
 [class*="NavLink"][class*="active"] {
-  color: var(--primary-light) !important;
-  background: #1a1a1a !important;
+  color: var(--accent) !important;
+  background: var(--accent-soft) !important;
 }
 
-/* 主编辑区 */
+/* 主区域 */
 [class*="MainContainer"],
 [class*="ControlPane"],
 [class*="Pane"],
 [class*="Editor"],
-[class*="EditorPane"],
-[class*="PreviewPane"],
-[class*="ScrollContainer"],
-[class*="Workflow"],
 [class*="CollectionMain"],
 [class*="ListContainer"] {
-  background: var(--hermes-bg) !important;
-  color: var(--hermes-fg) !important;
-  border-color: var(--hermes-border) !important;
+  background: var(--bg) !important;
+  color: var(--text) !important;
 }
 
-/* 卡片 / 列表项 */
+/* 隐藏专业预览分栏（配置里 preview:false 的补充） */
+[class*="PreviewPane"],
+[class*="SplitPane"] [class*="Pane"]:last-child:not([class*="ControlPane"]) {
+  display: none !important;
+}
+
+[class*="SplitPane"] [class*="Pane"]:first-child {
+  width: 100% !important;
+  flex: 1 1 100% !important;
+}
+
+/* 列表卡片 */
 [class*="Card"],
 [class*="ListCard"],
-[class*="EntryCard"],
-[class*="MediaCard"],
-[class*="TableRow"],
-[class*="ListItem"] {
-  background: var(--hermes-card) !important;
-  border-color: var(--hermes-border) !important;
-  color: var(--hermes-fg) !important;
+[class*="EntryCard"] {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text) !important;
 }
 
-[class*="Card"]:hover,
-[class*="ListCard"]:hover,
-[class*="EntryCard"]:hover,
-[class*="MediaCard"]:hover,
-[class*="TableRow"]:hover,
-[class*="ListItem"]:hover {
-  background: #1a1a1a !important;
+/* 表单 */
+label,
+[class*="Label"],
+[class*="FieldLabel"],
+[class*="ControlLabel"] {
+  color: var(--text) !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  margin-bottom: 6px !important;
 }
 
-/* 表单控件 */
+[class*="Hint"] {
+  color: var(--text-secondary) !important;
+  font-size: 13px !important;
+}
+
 input,
 textarea,
 select,
 [class*="Input"],
 [class*="TextArea"],
-[class*="Dropdown"],
-[class*="Control"],
-[class*="FieldLabel"],
 [class*="ReactSelect"] [class*="control"] {
-  background: var(--hermes-panel) !important;
-  color: var(--hermes-fg) !important;
-  border-color: var(--hermes-border) !important;
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius) !important;
+  font-size: 15px !important;
+  line-height: 1.6 !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: 2px solid var(--accent-soft) !important;
+  border-color: var(--accent) !important;
 }
 
 input::placeholder,
 textarea::placeholder {
-  color: #666 !important;
+  color: #9ca3af !important;
 }
 
-label,
-[class*="Label"],
-[class*="FieldLabel"],
-[class*="ControlLabel"],
-legend,
-[class*="Hint"] {
-  color: var(--hermes-muted) !important;
+/* 普通文本框加大 */
+textarea:not(.blog-editor-area) {
+  min-height: 96px !important;
 }
 
-/* 链接：仅文字高亮，不做按钮底 */
+/* 链接 */
 a {
-  color: var(--primary-light) !important;
+  color: var(--accent) !important;
   background: transparent !important;
-  border-color: transparent !important;
-  text-decoration: none;
-}
-
-a:hover {
-  color: #93c5fd !important;
 }
 
 /* 按钮 */
 button,
 [class*="Button"] {
-  color: var(--hermes-fg) !important;
-  border-color: var(--hermes-border) !important;
+  border-radius: var(--radius) !important;
+  font-size: 14px !important;
 }
 
 button[class*="primary"],
 [class*="Button"][class*="primary"],
 [class*="LoginButton"] {
-  background: var(--primary) !important;
-  border-color: var(--primary) !important;
-  color: #ffffff !important;
-}
-
-button[class*="primary"]:hover,
-[class*="Button"][class*="primary"]:hover,
-[class*="LoginButton"]:hover {
-  background: var(--primary-dark) !important;
-  border-color: var(--primary-dark) !important;
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  color: #fff !important;
 }
 
 button[class*="gray"],
-[class*="Button"][class*="gray"],
 [class*="Button"][class*="default"]:not([class*="primary"]) {
-  background: var(--hermes-panel) !important;
-  color: var(--hermes-fg) !important;
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
 }
 
-/* 下拉 / 弹层 */
-[class*="dropdown"],
-[class*="Dropdown"],
-[class*="Popover"],
-[class*="Modal"],
-[class*="ReactModal"],
-[class*="Menu"],
-[class*="menu"] {
-  background: var(--hermes-card) !important;
-  color: var(--hermes-fg) !important;
-  border-color: var(--hermes-border) !important;
-}
-
+/* 弹层 */
 [class*="ReactModal__Overlay"] {
-  background: rgba(0, 0, 0, 0.72) !important;
+  background: rgba(17, 24, 39, 0.45) !important;
 }
 
 [class*="ReactModal__Content"],
-[class*="ModalContent"] {
-  background: var(--hermes-card) !important;
-  color: var(--hermes-fg) !important;
-  border: 1px solid var(--hermes-border) !important;
+[class*="ModalContent"],
+[class*="Dropdown"],
+[class*="Menu"] {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
 }
 
-/* Markdown 编辑器 */
+/* Markdown 编辑器 — 大白框、黑字 */
+[class*="MarkdownControl"],
+[class*="markdown-control"] {
+  background: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius) !important;
+  overflow: hidden;
+}
+
+[class*="MarkdownControl"] [class*="Toolbar"],
+[class*="markdown-toolbar"] {
+  background: #f9fafb !important;
+  border-bottom: 1px solid var(--border) !important;
+}
+
+[class*="MarkdownControl"] button,
+[class*="markdown-toolbar"] button {
+  color: var(--text) !important;
+  background: transparent !important;
+  border: none !important;
+  opacity: 1 !important;
+}
+
 .CodeMirror,
-[class*="MarkdownControl"] .CodeMirror,
-[class*="Editor"] .CodeMirror {
-  background: var(--hermes-panel) !important;
-  color: var(--hermes-fg) !important;
-  border: 1px solid var(--hermes-border) !important;
+[class*="MarkdownControl"] .CodeMirror {
+  background: #ffffff !important;
+  color: #111827 !important;
+  font-size: 16px !important;
+  line-height: 1.75 !important;
+  min-height: 360px !important;
 }
 
 .CodeMirror-gutters {
-  background: #0d0d0d !important;
-  border-color: var(--hermes-border) !important;
+  background: #f9fafb !important;
+  border-right: 1px solid var(--border) !important;
 }
 
-.cm-s-default .cm-header,
-.cm-s-default .cm-strong,
-.cm-s-default .cm-em,
-.cm-s-default .cm-link,
-.cm-s-default .cm-url,
-.cm-s-default .cm-quote {
-  color: var(--hermes-fg) !important;
+.CodeMirror-cursor {
+  border-left-color: #111827 !important;
 }
 
-.cm-s-default .cm-comment {
-  color: #6b7280 !important;
+.CodeMirror-line,
+.CodeMirror pre,
+.CodeMirror-code {
+  color: #111827 !important;
 }
 
-.cm-s-default .cm-keyword {
-  color: var(--primary-light) !important;
+.cm-s-default .cm-header { color: #111827 !important; font-weight: 700; }
+.cm-s-default .cm-strong { font-weight: 700; color: #111827 !important; }
+.cm-s-default .cm-link { color: var(--accent) !important; }
+.cm-s-default .cm-url { color: var(--text-secondary) !important; }
+.cm-s-default .cm-quote { color: var(--text-secondary) !important; }
+.cm-s-default .cm-comment { color: #9ca3af !important; }
+
+/* 自定义简易编辑器 */
+.blog-editor {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
 }
 
-/* 预览区 */
-[class*="PreviewPane"] iframe,
-[class*="PreviewPane"] {
-  background: #ffffff;
+.blog-editor-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 12px;
+  background: #f9fafb;
+  border-bottom: 1px solid var(--border);
+}
+
+.blog-editor-toolbar button {
+  padding: 6px 12px !important;
+  border: 1px solid var(--border) !important;
+  background: #fff !important;
+  color: var(--text) !important;
+  cursor: pointer;
+  font-size: 14px !important;
+}
+
+.blog-editor-toolbar button:hover {
+  background: var(--accent-soft) !important;
+  border-color: var(--accent) !important;
+}
+
+.blog-editor-emoji {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  background: #fff;
+}
+
+.blog-editor-emoji button {
+  width: 36px;
+  height: 36px;
+  padding: 0 !important;
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  font-size: 20px !important;
+  cursor: pointer;
+  border-radius: 6px !important;
+}
+
+.blog-editor-emoji button:hover {
+  background: var(--accent-soft) !important;
+  border-color: var(--border) !important;
+}
+
+.blog-editor-area {
+  width: 100%;
+  min-height: 420px;
+  padding: 16px;
+  border: 0 !important;
+  resize: vertical;
+  font-size: 16px !important;
+  line-height: 1.75 !important;
+  color: var(--text) !important;
+  background: #fff !important;
+}
+
+.blog-editor-hint {
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  background: #f9fafb;
+  border-top: 1px solid var(--border);
+}
+
+/* 图片上传区 */
+[class*="ImageControl"],
+[class*="FileControl"] {
+  background: var(--surface) !important;
+  border: 1px dashed var(--border) !important;
+  border-radius: var(--radius) !important;
+  padding: 12px !important;
 }
 
 /* 表格 */
-table,
-thead,
-tbody,
-tr,
-th,
-td {
-  background: var(--hermes-bg) !important;
-  color: var(--hermes-fg) !important;
-  border-color: var(--hermes-border) !important;
+table, th, td {
+  color: var(--text) !important;
+  border-color: var(--border) !important;
 }
 
-/* 滚动条 */
-* {
-  scrollbar-color: #333 #0a0a0a;
-  scrollbar-width: thin;
-}
-
-*::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-*::-webkit-scrollbar-track {
-  background: #0a0a0a;
-}
-
-*::-webkit-scrollbar-thumb {
-  background: #333;
-  border-radius: 4px;
-}
-
-/* 启动提示 / 配置页 */
+/* 登录门 / 配置页 */
+#admin-gate form,
 #boot-hint,
 .admin-page {
-  max-width: 640px;
-  margin: 40px auto;
-  padding: 24px;
-  border: 1px solid var(--hermes-border);
-  border-radius: 8px;
-  background: var(--hermes-card);
-  color: var(--hermes-muted);
-  font: 14px/1.7 system-ui, sans-serif;
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
 }
 
-#boot-hint h1,
+#admin-gate h1,
 .admin-page h1 {
-  margin: 0 0 12px;
-  color: var(--hermes-fg);
-  font-size: 20px;
+  color: var(--text) !important;
 }
 
-.admin-page h2 {
-  color: var(--primary-light);
-  font-size: 16px;
-  margin-top: 28px;
+#admin-gate p,
+.admin-page p {
+  color: var(--text-secondary) !important;
 }
 
-.admin-page code,
-.admin-page pre {
-  background: var(--hermes-panel);
-  border: 1px solid var(--hermes-border);
-  border-radius: 6px;
-  color: var(--hermes-fg);
+#admin-gate input,
+.admin-page input {
+  background: #fff !important;
+  color: var(--text) !important;
 }
 
-.admin-page pre {
-  padding: 12px;
-  overflow-x: auto;
+#admin-gate button {
+  background: var(--accent) !important;
+  color: #fff !important;
 }
 
-/* Toastify 组件兜底 */
-.Toastify__toast-container {
-  color: var(--hermes-fg);
-}
-
-.Toastify__toast,
-.Toastify__toast-theme--light,
-.Toastify__toast-theme--dark {
-  background: var(--hermes-card) !important;
-  color: var(--hermes-fg) !important;
-  border: 1px solid var(--hermes-border) !important;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45) !important;
-}
-
-.Toastify__toast-body {
-  color: var(--hermes-fg) !important;
-}
-
-.Toastify__close-button {
-  color: var(--hermes-muted) !important;
-  opacity: 1;
-}
-
-.Toastify__close-button:hover {
-  color: var(--hermes-fg) !important;
-}
-
-.Toastify__progress-bar {
-  background: var(--primary) !important;
-}
-
-.Toastify__progress-bar--info { background: var(--toastify-color-info) !important; }
-.Toastify__progress-bar--success { background: var(--toastify-color-success) !important; }
-.Toastify__progress-bar--warning { background: var(--toastify-color-warning) !important; }
-.Toastify__progress-bar--error { background: var(--toastify-color-error) !important; }
-
-.Toastify__toast-icon {
-  color: inherit !important;
+/* Toast */
+.Toastify__toast {
+  background: var(--surface) !important;
+  color: var(--text) !important;
+  border: 1px solid var(--border) !important;
 }
