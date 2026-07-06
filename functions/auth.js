@@ -1,11 +1,14 @@
 import {
-  authResponse,
-  createSession,
+  credentialErrorMessage,
+  parseCredentials,
+  verifyAdminCredentials,
+} from "./_auth.js";
+import { isTotpEnabled } from "./_totp.js";
+import {
   getOrigins,
   getSessionCookie,
   issueGithubToken,
   passwordForm,
-  sessionCookieHeader,
   verifySession,
 } from "./_shared.js";
 
@@ -25,9 +28,10 @@ async function handlePatAuth({ env, request }) {
     return issueGithubToken(env, origins, adminPassword);
   }
 
-  return new Response(passwordForm(origins), {
-    headers: { "Content-Type": "text/html; charset=utf-8" },
-  });
+  return new Response(
+    passwordForm(origins, "", { totpRequired: isTotpEnabled(env) }),
+    { headers: { "Content-Type": "text/html; charset=utf-8" } }
+  );
 }
 
 export async function onRequestGet({ env, request }) {
@@ -87,21 +91,18 @@ export async function onRequestPost({ env, request }) {
     );
   }
 
-  let password = "";
-  const contentType = request.headers.get("Content-Type") || "";
-  if (contentType.includes("application/x-www-form-urlencoded") || contentType.includes("multipart/form-data")) {
-    const form = await request.formData();
-    password = String(form.get("password") || "");
-  } else {
-    const body = await request.json().catch(() => ({}));
-    password = String(body.password || "");
-  }
-
-  if (password !== adminPassword) {
-    return new Response(passwordForm(origins, "密码错误，请重试"), {
-      status: 401,
-      headers: { "Content-Type": "text/html; charset=utf-8" },
-    });
+  const credentials = await parseCredentials(request);
+  const result = await verifyAdminCredentials(env, credentials);
+  if (!result.ok) {
+    return new Response(
+      passwordForm(origins, credentialErrorMessage(result.error), {
+        totpRequired: isTotpEnabled(env),
+      }),
+      {
+        status: 401,
+        headers: { "Content-Type": "text/html; charset=utf-8" },
+      }
+    );
   }
 
   return issueGithubToken(env, origins, adminPassword);

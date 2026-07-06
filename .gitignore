@@ -35,6 +35,7 @@ yarn-error.log*
 .env*
 !.env.example
 ADMIN_PASSWORD.txt
+TOTP_SECRET.txt
 
 # vercel
 .vercel

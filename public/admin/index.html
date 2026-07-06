@@ -24,7 +24,8 @@
       }
       #admin-gate h1 { margin: 0 0 8px; font-size: 20px; color: #f0f0f0; }
       #admin-gate p { margin: 0 0 16px; color: #a3a3a3; line-height: 1.6; }
-      #admin-gate label { display: block; margin-bottom: 6px; color: #a3a3a3; }
+      #admin-gate label { display: block; margin: 12px 0 6px; color: #a3a3a3; }
+      #admin-gate label:first-of-type { margin-top: 0; }
       #admin-gate input {
         width: 100%;
         padding: 10px 12px;
@@ -44,17 +45,24 @@
         cursor: pointer;
       }
       #admin-gate .error { color: #ef4444; margin: 0 0 12px; min-height: 20px; }
+      #admin-gate .hint { font-size: 13px; margin-top: 12px; }
+      #totp-group { display: none; }
     </style>
   </head>
   <body data-theme="dark">
     <div id="admin-gate">
       <form id="gate-form">
         <h1>管理登录</h1>
-        <p>请先输入管理密码。</p>
+        <p id="gate-intro">请先输入管理密码。</p>
         <p class="error" id="gate-error"></p>
         <label for="gate-password">密码</label>
         <input id="gate-password" name="password" type="password" autocomplete="current-password" required autofocus />
+        <div id="totp-group">
+          <label for="gate-totp">动态口令</label>
+          <input id="gate-totp" name="totp" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" placeholder="Authenticator 6 位数字" />
+        </div>
         <button type="submit">进入</button>
+        <p class="hint"><a href="bind.html">绑定 Authenticator</a></p>
       </form>
     </div>
     <div id="boot-hint">
@@ -72,30 +80,48 @@
         var gate = document.getElementById("admin-gate");
         var gateForm = document.getElementById("gate-form");
         var gateError = document.getElementById("gate-error");
+        var totpGroup = document.getElementById("totp-group");
+        var gateIntro = document.getElementById("gate-intro");
+        var totpInput = document.getElementById("gate-totp");
 
-        async function hasSession() {
+        async function getSessionState() {
           var res = await fetch("/session", { credentials: "include" });
-          if (!res.ok) return false;
-          var data = await res.json();
-          return !!data.ok;
+          var data = await res.json().catch(function () { return {}; });
+          return data;
+        }
+
+        function configureGate(totpRequired) {
+          if (totpRequired) {
+            totpGroup.style.display = "block";
+            totpInput.required = true;
+            gateIntro.textContent = "请输入管理密码和 Authenticator 动态口令。";
+          }
         }
 
         async function ensureSession() {
-          if (await hasSession()) return true;
+          var state = await getSessionState();
+          configureGate(!!state.totp_required);
+          if (state.ok) return true;
+
           gate.style.display = "flex";
           return new Promise(function (resolve) {
             gateForm.addEventListener("submit", async function (event) {
               event.preventDefault();
               gateError.textContent = "";
-              var password = document.getElementById("gate-password").value;
+              var body = {
+                password: document.getElementById("gate-password").value,
+                totp: totpInput.value || "",
+              };
               var res = await fetch("/session", {
                 method: "POST",
                 credentials: "include",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ password: password }),
+                body: JSON.stringify(body),
               });
+              var data = await res.json().catch(function () { return {}; });
               if (!res.ok) {
-                gateError.textContent = "密码错误，请重试";
+                gateError.textContent = data.message || "登录失败，请重试";
+                configureGate(!!data.totp_required);
                 return;
               }
               gate.style.display = "none";

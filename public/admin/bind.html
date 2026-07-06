@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>绑定 Authenticator</title>
+    <link rel="stylesheet" href="cms.css" />
+    <style>
+      body.admin-page { max-width: 520px; }
+      .qr-wrap { text-align: center; margin: 20px 0; }
+      .qr-wrap img { border: 1px solid #333; border-radius: 8px; background: #fff; padding: 8px; }
+      .secret {
+        word-break: break-all;
+        font-family: ui-monospace, monospace;
+        font-size: 13px;
+      }
+      .ok { color: #22c55e; }
+      .error { color: #ef4444; }
+      .actions { display: flex; gap: 12px; margin-top: 20px; }
+      .actions a, .actions button {
+        flex: 1;
+        text-align: center;
+        padding: 10px 12px;
+        border-radius: 6px;
+        border: 1px solid #333;
+        background: #111;
+        color: #f0f0f0;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      .actions button { background: #3b82f6; border-color: #3b82f6; color: #fff; }
+      #verify-form { margin-top: 24px; padding-top: 20px; border-top: 1px solid #333; }
+      #verify-form input { width: 100%; margin-top: 8px; }
+    </style>
+  </head>
+  <body data-theme="dark" class="admin-page">
+    <h1>绑定 Authenticator</h1>
+    <p id="status">正在加载…</p>
+    <div id="content" hidden>
+      <p>用 Google Authenticator、Microsoft Authenticator 等 App 扫描二维码。</p>
+      <div class="qr-wrap">
+        <img id="qr" alt="TOTP QR Code" width="220" height="220" />
+      </div>
+      <p>无法扫码时，可手动添加密钥：</p>
+      <p class="secret" id="secret"></p>
+      <p>发行方：<span id="issuer"></span> · 账号：<span id="account"></span></p>
+
+      <form id="verify-form">
+        <label for="verify-password">管理密码</label>
+        <input id="verify-password" type="password" autocomplete="current-password" required />
+        <label for="verify-totp">输入 App 中显示的 6 位动态口令以确认绑定</label>
+        <input id="verify-totp" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required />
+        <div class="actions">
+          <a href="/admin/">返回管理页</a>
+          <button type="submit">验证绑定</button>
+        </div>
+      </form>
+      <p id="verify-result"></p>
+    </div>
+
+    <script>
+      (async function () {
+        var status = document.getElementById("status");
+        var content = document.getElementById("content");
+
+        var sessionRes = await fetch("/session", { credentials: "include" });
+        var sessionData = await sessionRes.json().catch(function () { return {}; });
+        if (!sessionData.ok) {
+          status.innerHTML = '请先 <a href="/admin/">登录管理页</a> 后再绑定。';
+          return;
+        }
+
+        var setupRes = await fetch("/totp/setup", { credentials: "include" });
+        var setup = await setupRes.json().catch(function () { return {}; });
+        if (!setup.ok) {
+          status.textContent = "动态口令尚未配置，请联系管理员启用。";
+          return;
+        }
+
+        document.getElementById("qr").src = setup.qr_url;
+        document.getElementById("secret").textContent = setup.secret;
+        document.getElementById("issuer").textContent = setup.issuer;
+        document.getElementById("account").textContent = setup.account;
+        status.style.display = "none";
+        content.hidden = false;
+
+        document.getElementById("verify-form").addEventListener("submit", async function (event) {
+          event.preventDefault();
+          var result = document.getElementById("verify-result");
+          result.className = "";
+          result.textContent = "验证中…";
+          var verifyRes = await fetch("/totp/setup", {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              password: document.getElementById("verify-password").value,
+              totp: document.getElementById("verify-totp").value,
+            }),
+          });
+          var verifyData = await verifyRes.json().catch(function () { return {}; });
+          if (verifyData.ok) {
+            result.className = "ok";
+            result.textContent = "绑定成功！以后登录需要密码 + 动态口令。";
+          } else {
+            result.className = "error";
+            result.textContent = "验证失败，请检查口令是否正确。";
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>

@@ -103,10 +103,17 @@ export function authResponse(provider, status, content, origins) {
 </script></body></html>`;
 }
 
-export function passwordForm(origins, errorMessage = "") {
+export function passwordForm(origins, errorMessage = "", options = {}) {
   const error = errorMessage
     ? `<p style="color:#ef4444;margin:0 0 12px;">${errorMessage}</p>`
     : "";
+  const totpField = options.totpRequired
+    ? `<label for="totp">动态口令</label>
+  <input id="totp" name="totp" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" placeholder="Authenticator 6 位数字" required />`
+    : "";
+  const intro = options.totpRequired
+    ? "请输入管理密码和 Authenticator 动态口令。"
+    : "请输入管理密码后继续。";
 
   return `<!DOCTYPE html><html lang="zh-CN" data-theme="dark"><head><meta charset="utf-8"><title>管理登录</title>
 <style>
@@ -115,17 +122,19 @@ export function passwordForm(origins, errorMessage = "") {
   form { width:min(320px,92vw); padding:24px; border:1px solid #333; border-radius:8px; background:#141414; }
   h1 { margin:0 0 8px; font-size:18px; }
   p { margin:0 0 16px; color:#a3a3a3; line-height:1.5; }
-  label { display:block; margin-bottom:6px; color:#a3a3a3; }
+  label { display:block; margin:12px 0 6px; color:#a3a3a3; }
+  label:first-of-type { margin-top:0; }
   input { width:100%; padding:10px 12px; border:1px solid #333; border-radius:6px; background:#111; color:#f0f0f0; }
   button { width:100%; margin-top:16px; padding:10px 12px; border:0; border-radius:6px; background:#3b82f6; color:#fff; font:inherit; cursor:pointer; }
   button:hover { background:#2563eb; }
 </style></head><body>
 <form method="post" action="/auth">
   <h1>管理登录</h1>
-  <p>请输入管理密码后继续。</p>
+  <p>${intro}</p>
   ${error}
   <label for="password">密码</label>
   <input id="password" name="password" type="password" autocomplete="current-password" required autofocus />
+  ${totpField}
   <button type="submit">继续</button>
 </form>
 </body></html>`;
