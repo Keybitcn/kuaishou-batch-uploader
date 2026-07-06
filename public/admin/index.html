@@ -6,9 +6,57 @@
     <meta name="robots" content="noindex, nofollow" />
     <title>Key 博客</title>
     <link rel="stylesheet" href="cms.css" />
-    <style>#boot-hint { display: none; margin-top: 48px; }</style>
+    <style>
+      #boot-hint { display: none; margin-top: 48px; }
+      #admin-gate {
+        display: none;
+        min-height: 100vh;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+      #admin-gate form {
+        width: min(360px, 100%);
+        padding: 24px;
+        border: 1px solid #333;
+        border-radius: 8px;
+        background: #141414;
+      }
+      #admin-gate h1 { margin: 0 0 8px; font-size: 20px; color: #f0f0f0; }
+      #admin-gate p { margin: 0 0 16px; color: #a3a3a3; line-height: 1.6; }
+      #admin-gate label { display: block; margin-bottom: 6px; color: #a3a3a3; }
+      #admin-gate input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #333;
+        border-radius: 6px;
+        background: #111;
+        color: #f0f0f0;
+      }
+      #admin-gate button {
+        width: 100%;
+        margin-top: 16px;
+        padding: 10px 12px;
+        border: 0;
+        border-radius: 6px;
+        background: #3b82f6;
+        color: #fff;
+        cursor: pointer;
+      }
+      #admin-gate .error { color: #ef4444; margin: 0 0 12px; min-height: 20px; }
+    </style>
   </head>
   <body data-theme="dark">
+    <div id="admin-gate">
+      <form id="gate-form">
+        <h1>管理登录</h1>
+        <p>请先输入管理密码。</p>
+        <p class="error" id="gate-error"></p>
+        <label for="gate-password">密码</label>
+        <input id="gate-password" name="password" type="password" autocomplete="current-password" required autofocus />
+        <button type="submit">进入</button>
+      </form>
+    </div>
     <div id="boot-hint">
       <h1>加载失败</h1>
       <p id="boot-msg">正在加载配置…</p>
@@ -21,7 +69,43 @@
       (async function () {
         var hint = document.getElementById("boot-hint");
         var msg = document.getElementById("boot-msg");
+        var gate = document.getElementById("admin-gate");
+        var gateForm = document.getElementById("gate-form");
+        var gateError = document.getElementById("gate-error");
+
+        async function hasSession() {
+          var res = await fetch("/session", { credentials: "include" });
+          if (!res.ok) return false;
+          var data = await res.json();
+          return !!data.ok;
+        }
+
+        async function ensureSession() {
+          if (await hasSession()) return true;
+          gate.style.display = "flex";
+          return new Promise(function (resolve) {
+            gateForm.addEventListener("submit", async function (event) {
+              event.preventDefault();
+              gateError.textContent = "";
+              var password = document.getElementById("gate-password").value;
+              var res = await fetch("/session", {
+                method: "POST",
+                credentials: "include",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ password: password }),
+              });
+              if (!res.ok) {
+                gateError.textContent = "密码错误，请重试";
+                return;
+              }
+              gate.style.display = "none";
+              resolve(true);
+            }, { once: false });
+          });
+        }
+
         try {
+          await ensureSession();
           var res = await fetch("config.yml");
           if (!res.ok) throw new Error("无法读取 config.yml");
           var config = jsyaml.load(await res.text());
